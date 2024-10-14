@@ -69,6 +69,7 @@ func NewCEVC(localEntity spineapi.EntityLocalInterface, eventCB api.EntityEventC
 		UseCaseSupportUpdate,
 		validActorTypes,
 		validEntityTypes,
+		false,
 	)
 
 	uc := &CEVC{

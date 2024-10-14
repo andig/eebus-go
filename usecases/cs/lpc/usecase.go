@@ -76,6 +76,7 @@ func NewLPC(localEntity spineapi.EntityLocalInterface, eventCB api.EntityEventCa
 		UseCaseSupportUpdate,
 		validActorTypes,
 		validEntityTypes,
+		false,
 	)
 
 	uc := &LPC{

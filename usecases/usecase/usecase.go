@@ -24,8 +24,9 @@ type UseCaseBase struct {
 
 	availableEntityScenarios []api.RemoteEntityScenarios // map of scenarios and their availability for each compatible remote entity
 
-	validActorTypes  []model.UseCaseActorType // valid remote actor types for this use case
-	validEntityTypes []model.EntityTypeType   // valid remote entity types for this use case (if nil all are valid)
+	validActorTypes     []model.UseCaseActorType // valid remote actor types for this use case
+	validEntityTypes    []model.EntityTypeType   // valid remote entity types for this use case
+	allEntityTypesValid bool
 
 	mux sync.Mutex
 }
@@ -56,6 +57,7 @@ func NewUseCaseBase(
 	useCaseUpdateEvent api.EventType,
 	validActorTypes []model.UseCaseActorType,
 	validEntityTypes []model.EntityTypeType,
+	allEntityTypesValid bool,
 ) *UseCaseBase {
 	ucb := &UseCaseBase{
 		LocalEntity:               localEntity,
@@ -68,6 +70,7 @@ func NewUseCaseBase(
 		useCaseUpdateEvent:        useCaseUpdateEvent,
 		validActorTypes:           validActorTypes,
 		validEntityTypes:          validEntityTypes,
+		allEntityTypesValid:       allEntityTypesValid,
 	}
 
 	_ = localEntity.Device().Events().Subscribe(ucb)
@@ -110,10 +113,11 @@ func (u *UseCaseBase) UpdateUseCaseAvailability(available bool) {
 
 func (u *UseCaseBase) IsCompatibleEntityType(entity spineapi.EntityRemoteInterface) bool {
 	if entity == nil {
+
 		return false
 	}
 
-	if u.validEntityTypes == nil {
+	if u.allEntityTypesValid {
 		return true
 	}
 

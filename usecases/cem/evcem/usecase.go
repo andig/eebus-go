@@ -68,7 +68,9 @@ func NewEVCEM(
 		eventCB,
 		UseCaseSupportUpdate,
 		validActorTypes,
-		validEntityTypes)
+		validEntityTypes,
+		false,
+	)
 
 	uc := &EVCEM{
 		UseCaseBase: usecase,
