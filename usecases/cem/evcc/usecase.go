@@ -95,7 +95,7 @@ func NewEVCC(
 	return uc
 }
 
-func (e *EVCC) AddFeatures() {
+func (e *EVCC) AddFeatures() error {
 	// client features
 	var clientFeatures = []model.FeatureTypeType{
 		model.FeatureTypeTypeDeviceConfiguration,
@@ -108,4 +108,6 @@ func (e *EVCC) AddFeatures() {
 		f := e.LocalEntity.GetOrAddFeature(feature, model.RoleTypeClient)
 		f.AddResultCallback(e.HandleResponse)
 	}
+
+	return nil
 }

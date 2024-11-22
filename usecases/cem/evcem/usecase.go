@@ -82,7 +82,7 @@ func NewEVCEM(
 	return uc
 }
 
-func (e *EVCEM) AddFeatures() {
+func (e *EVCEM) AddFeatures() error {
 	// client features
 	var clientFeatures = []model.FeatureTypeType{
 		model.FeatureTypeTypeElectricalConnection,
@@ -91,4 +91,6 @@ func (e *EVCEM) AddFeatures() {
 	for _, feature := range clientFeatures {
 		_ = e.LocalEntity.GetOrAddFeature(feature, model.RoleTypeClient)
 	}
+
+	return nil
 }

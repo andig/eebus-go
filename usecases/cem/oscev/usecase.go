@@ -69,7 +69,7 @@ func NewOSCEV(localEntity spineapi.EntityLocalInterface, eventCB api.EntityEvent
 	return uc
 }
 
-func (e *OSCEV) AddFeatures() {
+func (e *OSCEV) AddFeatures() error {
 	// client features
 	var clientFeatures = []model.FeatureTypeType{
 		model.FeatureTypeTypeLoadControl,
@@ -83,4 +83,6 @@ func (e *OSCEV) AddFeatures() {
 	f := e.LocalEntity.GetOrAddFeature(model.FeatureTypeTypeDeviceDiagnosis, model.RoleTypeServer)
 	f.AddFunctionType(model.FunctionTypeDeviceDiagnosisStateData, true, false)
 	f.AddFunctionType(model.FunctionTypeDeviceDiagnosisHeartbeatData, true, false)
+
+	return nil
 }

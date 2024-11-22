@@ -226,7 +226,7 @@ func (e *LPP) deviceConfigurationWriteCB(msg *spineapi.Message) {
 	go e.approveOrDenyDeviceConfiguration(msg, true, "")
 }
 
-func (e *LPP) AddFeatures() {
+func (e *LPP) AddFeatures() error {
 	// client features
 	_ = e.LocalEntity.GetOrAddFeature(model.FeatureTypeTypeDeviceDiagnosis, model.RoleTypeClient)
 
@@ -234,7 +234,10 @@ func (e *LPP) AddFeatures() {
 	f := e.LocalEntity.GetOrAddFeature(model.FeatureTypeTypeLoadControl, model.RoleTypeServer)
 	f.AddFunctionType(model.FunctionTypeLoadControlLimitDescriptionListData, true, false)
 	f.AddFunctionType(model.FunctionTypeLoadControlLimitListData, true, true)
-	_ = f.AddWriteApprovalCallback(e.loadControlWriteCB)
+	err := f.AddWriteApprovalCallback(e.loadControlWriteCB)
+	if err != nil {
+		return err
+	}
 
 	measurementId := internal.GetPowerTotalMeasurementId(e.LocalEntity)
 	newLimitDesc := model.LoadControlLimitDescriptionDataType{
@@ -259,6 +262,8 @@ func (e *LPP) AddFeatures() {
 			},
 		}
 		_ = lc.UpdateLimitDataForIds(newLimiData)
+	} else {
+		return err
 	}
 
 	f = e.LocalEntity.GetOrAddFeature(model.FeatureTypeTypeDeviceConfiguration, model.RoleTypeServer)
@@ -291,7 +296,7 @@ func (e *LPP) AddFeatures() {
 		value := &model.DeviceConfigurationKeyValueValueType{
 			ScaledNumber: model.NewScaledNumberType(0),
 		}
-		_ = dcs.UpdateKeyValueDataForFilter(
+		err1 := dcs.UpdateKeyValueDataForFilter(
 			model.DeviceConfigurationKeyValueDataType{
 				Value:             value,
 				IsValueChangeable: util.Ptr(true),
@@ -301,11 +306,14 @@ func (e *LPP) AddFeatures() {
 				KeyName: util.Ptr(model.DeviceConfigurationKeyNameTypeFailsafeProductionActivePowerLimit),
 			},
 		)
+		if err1 != nil {
+			return err1
+		}
 
 		value = &model.DeviceConfigurationKeyValueValueType{
 			Duration: model.NewDurationType(0),
 		}
-		_ = dcs.UpdateKeyValueDataForFilter(
+		err1 = dcs.UpdateKeyValueDataForFilter(
 			model.DeviceConfigurationKeyValueDataType{
 				Value:             value,
 				IsValueChangeable: util.Ptr(true),
@@ -315,6 +323,11 @@ func (e *LPP) AddFeatures() {
 				KeyName: util.Ptr(model.DeviceConfigurationKeyNameTypeFailsafeDurationMinimum),
 			},
 		)
+		if err1 != nil {
+			return err1
+		}
+	} else {
+		return err
 	}
 
 	f = e.LocalEntity.GetOrAddFeature(model.FeatureTypeTypeDeviceDiagnosis, model.RoleTypeServer)
@@ -333,6 +346,13 @@ func (e *LPP) AddFeatures() {
 			CharacteristicType:     util.Ptr(e.characteristicType()),
 			Unit:                   util.Ptr(model.UnitOfMeasurementTypeW),
 		}
-		_, _ = ec.AddCharacteristic(newCharData)
+		_, err1 := ec.AddCharacteristic(newCharData)
+		if err1 != nil {
+			return err1
+		}
+	} else {
+		return err
 	}
+
+	return nil
 }
