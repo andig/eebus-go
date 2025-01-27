@@ -179,7 +179,7 @@ func (h *hems) OnLPPEvent(ski string, device spineapi.DeviceRemoteInterface, ent
 			h.uccslpp.ApproveOrDenyProductionLimit(msgCounter, true, "")
 		}
 	case cslpp.DataUpdateLimit:
-		if currentLimit, err := h.uccslpp.ProductionLimit(); err != nil {
+		if currentLimit, err := h.uccslpp.ProductionLimit(); err == nil {
 			fmt.Println("New LPP Limit set to", currentLimit.Value, "W")
 		}
 	}
