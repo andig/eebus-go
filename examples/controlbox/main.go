@@ -141,14 +141,14 @@ func (h *controlbox) AllowWaitingForTrust(ski string) bool {
 
 // LPC Event Handler
 
-func (h *controlbox) sendLimit(entity spineapi.EntityRemoteInterface) {
+func (h *controlbox) sendConsumptionLimit(entity spineapi.EntityRemoteInterface) {
 	scenarios := h.uclpc.AvailableScenariosForEntity(entity)
 	if len(scenarios) == 0 ||
 		!slices.Contains(scenarios, 1) {
 		return
 	}
 
-	fmt.Println("Sending a limit in 5s...")
+	fmt.Println("Sending a consumption limit in 5s...")
 	time.AfterFunc(time.Second*5, func() {
 		limit := ucapi.LoadLimit{
 			Duration: time.Hour*1 + time.Minute*2 + time.Second*3,
@@ -158,17 +158,17 @@ func (h *controlbox) sendLimit(entity spineapi.EntityRemoteInterface) {
 
 		resultCB := func(msg model.ResultDataType) {
 			if *msg.ErrorNumber == model.ErrorNumberTypeNoError {
-				fmt.Println("Limit accepted.")
+				fmt.Println("Consumption limit accepted.")
 			} else {
-				fmt.Println("Limit rejected. Code", *msg.ErrorNumber, "Description", *msg.Description)
+				fmt.Println("Consumption limit rejected. Code", *msg.ErrorNumber, "Description", *msg.Description)
 			}
 		}
 		msgCounter, err := h.uclpc.WriteConsumptionLimit(entity, limit, resultCB)
 		if err != nil {
-			fmt.Println("Failed to send limit", err)
+			fmt.Println("Failed to send consumption limit", err)
 			return
 		}
-		fmt.Println("Sent limit to", entity.Device().Ski(), "with msgCounter", msgCounter)
+		fmt.Println("Sent consumption limit to", entity.Device().Ski(), "with msgCounter", msgCounter)
 	})
 }
 func (h *controlbox) OnLPCEvent(ski string, device spineapi.DeviceRemoteInterface, entity spineapi.EntityRemoteInterface, event api.EventType) {
@@ -178,27 +178,59 @@ func (h *controlbox) OnLPCEvent(ski string, device spineapi.DeviceRemoteInterfac
 
 	switch event {
 	case lpc.UseCaseSupportUpdate:
-		h.sendLimit(entity)
+		h.sendConsumptionLimit(entity)
 	case lpc.DataUpdateLimit:
 		if currentLimit, err := h.uclpc.ConsumptionLimit(entity); err == nil {
-			fmt.Println("New Limit received", currentLimit.Value, "W")
+			fmt.Println("New consumption limit received", currentLimit.Value, "W")
 		}
 	default:
 		return
 	}
 }
 
+// LPP Event Handler
+
+func (h *controlbox) sendProductionLimit(entity spineapi.EntityRemoteInterface) {
+	scenarios := h.uclpc.AvailableScenariosForEntity(entity)
+	if len(scenarios) == 0 ||
+		!slices.Contains(scenarios, 1) {
+		return
+	}
+
+	fmt.Println("Sending a production limit in 5s...")
+	time.AfterFunc(time.Second*5, func() {
+		limit := ucapi.LoadLimit{
+			Duration: time.Hour*1 + time.Minute*2 + time.Second*3,
+			IsActive: true,
+			Value:    100,
+		}
+
+		resultCB := func(msg model.ResultDataType) {
+			if *msg.ErrorNumber == model.ErrorNumberTypeNoError {
+				fmt.Println("Production limit accepted.")
+			} else {
+				fmt.Println("Production limit rejected. Code", *msg.ErrorNumber, "Description", *msg.Description)
+			}
+		}
+		msgCounter, err := h.uclpp.WriteProductionLimit(entity, limit, resultCB)
+		if err != nil {
+			fmt.Println("Failed to send production limit", err)
+			return
+		}
+		fmt.Println("Sent production limit to", entity.Device().Ski(), "with msgCounter", msgCounter)
+	})
+}
 func (h *controlbox) OnLPPEvent(ski string, device spineapi.DeviceRemoteInterface, entity spineapi.EntityRemoteInterface, event api.EventType) {
 	if !h.isConnected {
 		return
 	}
 
 	switch event {
-	case lpc.UseCaseSupportUpdate:
-		h.sendLimit(entity)
-	case lpc.DataUpdateLimit:
-		if currentLimit, err := h.uclpc.ConsumptionLimit(entity); err == nil {
-			fmt.Println("New Limit received", currentLimit.Value, "W")
+	case lpp.UseCaseSupportUpdate:
+		h.sendProductionLimit(entity)
+	case lpp.DataUpdateLimit:
+		if currentLimit, err := h.uclpp.ProductionLimit(entity); err == nil {
+			fmt.Println("New production limit received", currentLimit.Value, "W")
 		}
 	default:
 		return
