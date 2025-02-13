@@ -29,23 +29,47 @@ The supported functionality contains:
 - `service`: central package which provides access to SHIP and SPINE. Use this to create the EEBUS service, its configuration and connect to remote EEBUS services
 - `usecases`: containing actor and use case based implementations with use case scenario based APIs and events
 
-## Usage
+## Examples
 
-The included small demo applications do not implement any usecases and thus will end the connection once it reached exchanging usecase information.
+The examples folder contains a few demo applications using this stack. These do **not** provide complete implementations of any use case, but are intended as usage guidelines for the eebus-go stack in general and to have a quick demo.
 
-Services with implemented use cases will be implemented in different repositories and are also early work in progress:
+Therefore, please do not expect any of these examples to provide any meaningful functionality on their own, but instead view them as rough guidelines on the functionality you could implement using the eebus-go stack.
 
-- [HEMS](https://github.com/enbility/cemd)
+### Controlbox
 
-### HEMS
+This includes example code for sending an LPC limit 5 seconds after connecting to a compatible device that can receive LPC limits.
 
 #### First Run
 
 ```sh
-go run cmd/hems/main.go 4715
+go run cmd/controlbox/main.go 4713
 ```
 
-`4715` is the example server port that this process should use
+`4713` is the example server port that this process should listen on
+
+The certificate and key and the local SKI will be generated and printed. You should then save the certificate and the key to a file.
+
+#### General Usage
+
+```sh
+Usage: go run cmd/controlbox/main.go <serverport> <remoteski> <certfile> <keyfile>
+```
+
+- `remoteski` is the SKI of the remote device or service you want to connect to
+- `certfile` is a local file containing the generated certificate in the first usage run
+- `keyfile` is a local file containing the generated key in the first usage run
+
+### HEMS
+
+This includes example code for accepting LPC and LPP limits from a control box, receiving and printing data to the console from battery (VABD) and pv inverters (VAPD) and grid connection point data (MGCP).
+
+#### First Run
+
+```sh
+go run cmd/hems/main.go 4714
+```
+
+`4714` is the example server port that this process should listen on
 
 The certificate and key and the local SKI will be generated and printed. You should then save the certificate and the key to a file.
 
@@ -61,13 +85,15 @@ Usage: go run cmd/hems/main.go <serverport> <remoteski> <certfile> <keyfile>
 
 ### EVSE
 
+This includes example code for accepting LPC from a control box.
+
 #### First Run
 
 ```sh
 go run cmd/hems/main.go 4715
 ```
 
-`4715` is the example server port that this process should use
+`4715` is the example server port that this process should listen on
 
 The certificate and key and the local SKI will be generated and printed. You should then save the certificate and the key to a file.
 
