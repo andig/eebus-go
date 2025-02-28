@@ -22,7 +22,7 @@ func (o *OHPCF) OptionalPowerConsumptionAvailable(entity spineapi.EntityRemoteIn
 	}
 
 	if !o.isDataAvailable(data) {
-		return false, api.ErrDataNotAvailable
+		return false, nil
 	}
 
 	if data.Alternatives[0].PowerSequence[0].State != nil &&
@@ -30,7 +30,7 @@ func (o *OHPCF) OptionalPowerConsumptionAvailable(entity spineapi.EntityRemoteIn
 		return *data.Alternatives[0].PowerSequence[0].State.State == model.PowerSequenceStateTypeInactive, nil
 	}
 
-	return false, api.ErrDataNotAvailable
+	return false, nil
 }
 
 // The power value [OHPCF-011/2/1 or 2].
