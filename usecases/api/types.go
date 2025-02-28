@@ -166,3 +166,14 @@ type DurationSlotValue struct {
 	Duration time.Duration // Duration of this slot
 	Value    float64       // Energy Cost or Power Limit
 }
+
+type CompressorPowerConsumptionStateType string
+
+const (
+	CompressorPowerConsumptionStateAvailable CompressorPowerConsumptionStateType = "available"
+	CompressorPowerConsumptionStateScheduled CompressorPowerConsumptionStateType = "scheduled"
+	CompressorPowerConsumptionStateRunning   CompressorPowerConsumptionStateType = "running"
+	CompressorPowerConsumptionStatePaused    CompressorPowerConsumptionStateType = "paused"
+	CompressorPowerConsumptionStateCompleted CompressorPowerConsumptionStateType = "completed"
+	CompressorPowerConsumptionStateStopped   CompressorPowerConsumptionStateType = "stopped" // (aborted)
+)
