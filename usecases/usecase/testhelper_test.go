@@ -151,6 +151,18 @@ func setupDevices(
 	f.AddFunctionType(model.FunctionTypeDeviceClassificationUserData, true, true)
 	localEntity.AddFeature(f)
 
+	remoteDeviceName := "remote"
+
+	remoteDevice, entities := addRemoteDevice(remoteDeviceName, remoteSki, localDevice, t)
+
+	localDevice.AddRemoteDeviceForSki(remoteSki, remoteDevice)
+
+	return localEntity, remoteDevice, entities
+}
+
+func addRemoteDevice(remoteDeviceName, remoteDeviceSki string, localDevice spineapi.DeviceLocalInterface, t *testing.T) (
+	spineapi.DeviceRemoteInterface,
+	[]spineapi.EntityRemoteInterface) {
 	writeHandler := shipmocks.NewShipConnectionDataWriterInterface(t)
 	writeHandler.EXPECT().WriteShipMessageWithPayload(mock.Anything).Return().Maybe()
 	sender := spine.NewSender(writeHandler)
@@ -198,8 +210,6 @@ func setupDevices(
 			},
 		},
 	}
-
-	remoteDeviceName := "remote"
 
 	var featureInformations []model.NodeManagementDetailedDiscoveryFeatureInformationType
 	for index, feature := range remoteFeatures {
@@ -270,7 +280,7 @@ func setupDevices(
 		entity.UpdateDeviceAddress(*remoteDevice.Address())
 	}
 
-	localDevice.AddRemoteDeviceForSki(remoteSki, remoteDevice)
+	localDevice.AddRemoteDeviceForSki(remoteDeviceSki, remoteDevice)
 
-	return localEntity, remoteDevice, entities
+	return remoteDevice, entities
 }
