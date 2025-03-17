@@ -59,7 +59,28 @@ func (s *CemOhPCFSuite) Test_loadSmartEnergyManagementPsDataType() {
 				PowerTimeSlot: []model.SmartEnergyManagementPsPowerTimeSlotType{{
 					ValueList: &model.SmartEnergyManagementPsPowerTimeSlotValueListType{
 						Value: []model.PowerTimeSlotValueDataType{{
-							Value: model.NewScaledNumberType(1004),
+							Value:     model.NewScaledNumberType(1004),
+							ValueType: util.Ptr(model.PowerTimeSlotValueTypeTypePower),
+						}},
+					},
+				}},
+			}},
+		}},
+	}
+	payload.Data = data
+	s.sut.loadSmartEnergyManagementPsDataType(payload)
+	assert.True(s.T(), s.eventCalled)
+
+	s.eventCalled = false
+
+	data = &model.SmartEnergyManagementPsDataType{
+		Alternatives: []model.SmartEnergyManagementPsAlternativesType{{
+			PowerSequence: []model.SmartEnergyManagementPsPowerSequenceType{{
+				PowerTimeSlot: []model.SmartEnergyManagementPsPowerTimeSlotType{{
+					ValueList: &model.SmartEnergyManagementPsPowerTimeSlotValueListType{
+						Value: []model.PowerTimeSlotValueDataType{{
+							Value:     model.NewScaledNumberType(10432),
+							ValueType: util.Ptr(model.PowerTimeSlotValueTypeTypePowerMax),
 						}},
 					},
 				}},

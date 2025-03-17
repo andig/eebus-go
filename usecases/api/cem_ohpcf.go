@@ -14,13 +14,18 @@ type CemOHPCFInterface interface {
 
 	// The availability of an optional consumption of power [OHPCF-011/1].
 	//
-	// return true if the optional consumption of power is available
+	// return true if the optional consumption of power is possible
 	OptionalPowerConsumptionAvailable(entity spineapi.EntityRemoteInterface) (bool, error)
 
-	// The power value [OHPCF-011/2/1 or 2].
+	// The requested power estimate value [OHPCF-011/2/1].
 	//
-	// return the power value
-	Power(entity spineapi.EntityRemoteInterface) (float64, error)
+	// return the requested power estimate value
+	RequestedPowerEstimate(entity spineapi.EntityRemoteInterface) (float64, error)
+
+	// The maximal value for the requested power estimate [OHPCF-011/2/1].
+	//
+	// return the maximal value for the requested power estimate
+	RequestPowerMax(entity spineapi.EntityRemoteInterface) (float64, error)
 
 	// Indication whether the consumption may be stopped by the CEM [OHPCF-011/5].
 	//
@@ -57,19 +62,19 @@ type CemOHPCFInterface interface {
 	// Schedule an optional power consumption process [OHPCF-004].
 	//
 	// note:
-	// A re-schedule of an already scheduled power consumption process is possible as long as the
-	// scheduled process did not start.
+	// Rescheduling an already scheduled power consumption process is possible as long as the
+	// scheduled process has not startet yet.
 	//
 	// parameters:
 	//   - start: The start time of the power consumption
-	SchedulePowerConsumptionProcess(entity spineapi.EntityRemoteInterface, start time.Time, callback func(msg spineapi.ResponseMessage)) (*model.MsgCounterType, error)
+	SchedulePowerConsumptionProcess(entity spineapi.EntityRemoteInterface, start time.Time, resultCB func(result model.ResultDataType)) (*model.MsgCounterType, error)
 
 	// stop (abort) the process [OHPCF-022/1].
-	StopAbortPowerConsumptionProcess(entity spineapi.EntityRemoteInterface, callback func(msg spineapi.ResponseMessage)) (*model.MsgCounterType, error)
+	AbortPowerConsumptionProcess(entity spineapi.EntityRemoteInterface, resultCB func(result model.ResultDataType)) (*model.MsgCounterType, error)
 
 	// pause the process [OHPCF-022/2].
-	PausePowerConsumptionProcess(entity spineapi.EntityRemoteInterface, callback func(msg spineapi.ResponseMessage)) (*model.MsgCounterType, error)
+	PausePowerConsumptionProcess(entity spineapi.EntityRemoteInterface, resultCB func(result model.ResultDataType)) (*model.MsgCounterType, error)
 
 	// resume the process [OHPCF-022/3].
-	ResumePowerConsumptionProcess(entity spineapi.EntityRemoteInterface, callback func(msg spineapi.ResponseMessage)) (*model.MsgCounterType, error)
+	ResumePowerConsumptionProcess(entity spineapi.EntityRemoteInterface, resultCB func(result model.ResultDataType)) (*model.MsgCounterType, error)
 }

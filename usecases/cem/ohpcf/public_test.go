@@ -1,6 +1,7 @@
 package ohpcf
 
 import (
+	"github.com/enbility/eebus-go/usecases/api"
 	"github.com/enbility/spine-go/model"
 	"github.com/enbility/spine-go/util"
 	"github.com/stretchr/testify/assert"
@@ -36,10 +37,10 @@ func (s *CemOhPCFSuite) Test_OptionalPowerConsumptionAvailable() {
 }
 
 func (s *CemOhPCFSuite) Test_Power() {
-	_, err := s.sut.Power(s.mockRemoteEntity)
+	_, err := s.sut.RequestedPowerEstimate(s.mockRemoteEntity)
 	assert.NotNil(s.T(), err)
 
-	_, err = s.sut.Power(s.monitoredEntity)
+	_, err = s.sut.RequestedPowerEstimate(s.monitoredEntity)
 	assert.NotNil(s.T(), err)
 
 	data := &model.SmartEnergyManagementPsDataType{
@@ -48,7 +49,8 @@ func (s *CemOhPCFSuite) Test_Power() {
 				PowerTimeSlot: []model.SmartEnergyManagementPsPowerTimeSlotType{{
 					ValueList: &model.SmartEnergyManagementPsPowerTimeSlotValueListType{
 						Value: []model.PowerTimeSlotValueDataType{{
-							Value: model.NewScaledNumberType(1004),
+							Value:     model.NewScaledNumberType(1004),
+							ValueType: util.Ptr(model.PowerTimeSlotValueTypeTypePower),
 						}},
 					},
 				}},
@@ -60,9 +62,40 @@ func (s *CemOhPCFSuite) Test_Power() {
 	_, fErr := rFeature.UpdateData(true, model.FunctionTypeSmartEnergyManagementPsData, data, nil, nil)
 	assert.Nil(s.T(), fErr)
 
-	available, err := s.sut.Power(s.monitoredEntity)
+	available, err := s.sut.RequestedPowerEstimate(s.monitoredEntity)
 	assert.Nil(s.T(), err)
 	assert.Equal(s.T(), 1004.0, available)
+}
+
+func (s *CemOhPCFSuite) Test_MaxPower() {
+	_, err := s.sut.RequestPowerMax(s.mockRemoteEntity)
+	assert.NotNil(s.T(), err)
+
+	_, err = s.sut.RequestPowerMax(s.monitoredEntity)
+	assert.NotNil(s.T(), err)
+
+	data := &model.SmartEnergyManagementPsDataType{
+		Alternatives: []model.SmartEnergyManagementPsAlternativesType{{
+			PowerSequence: []model.SmartEnergyManagementPsPowerSequenceType{{
+				PowerTimeSlot: []model.SmartEnergyManagementPsPowerTimeSlotType{{
+					ValueList: &model.SmartEnergyManagementPsPowerTimeSlotValueListType{
+						Value: []model.PowerTimeSlotValueDataType{{
+							Value:     model.NewScaledNumberType(1006),
+							ValueType: util.Ptr(model.PowerTimeSlotValueTypeTypePowerMax),
+						}},
+					},
+				}},
+			}},
+		}},
+	}
+
+	rFeature := s.remoteDevice.FeatureByEntityTypeAndRole(s.monitoredEntity, model.FeatureTypeTypeSmartEnergyManagementPs, model.RoleTypeServer)
+	_, fErr := rFeature.UpdateData(true, model.FunctionTypeSmartEnergyManagementPsData, data, nil, nil)
+	assert.Nil(s.T(), fErr)
+
+	available, err := s.sut.RequestPowerMax(s.monitoredEntity)
+	assert.Nil(s.T(), err)
+	assert.Equal(s.T(), 1006.0, available)
 }
 
 func (s *CemOhPCFSuite) Test_ConsumptionIsStoppable() {
@@ -170,7 +203,7 @@ func (s *CemOhPCFSuite) Test_PowerConsumptionProcessState() {
 
 	state, err := s.sut.PowerConsumptionProcessState(s.monitoredEntity)
 	assert.Nil(s.T(), err)
-	assert.Equal(s.T(), "inactive", state)
+	assert.Equal(s.T(), api.CompressorPowerConsumptionStateAvailable, state)
 }
 
 func (s *CemOhPCFSuite) Test_PowerConsumptionMinimalRunDuration() {
@@ -241,10 +274,10 @@ func (s *CemOhPCFSuite) Test_SchedulePowerConsumptionProcess() {
 }
 
 func (s *CemOhPCFSuite) Test_StopAbortPowerConsumptionProcess() {
-	_, err := s.sut.StopAbortPowerConsumptionProcess(s.mockRemoteEntity, nil)
+	_, err := s.sut.AbortPowerConsumptionProcess(s.mockRemoteEntity, nil)
 	assert.NotNil(s.T(), err)
 
-	msgCounter, err := s.sut.StopAbortPowerConsumptionProcess(s.monitoredEntity, nil)
+	msgCounter, err := s.sut.AbortPowerConsumptionProcess(s.monitoredEntity, nil)
 	assert.NotNil(s.T(), msgCounter)
 	assert.Nil(s.T(), err)
 }

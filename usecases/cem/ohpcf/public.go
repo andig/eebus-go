@@ -4,6 +4,7 @@ import (
 	"github.com/enbility/eebus-go/api"
 	"github.com/enbility/eebus-go/features/client"
 	ucapi "github.com/enbility/eebus-go/usecases/api"
+	"github.com/enbility/ship-go/logging"
 	spineapi "github.com/enbility/spine-go/api"
 	"github.com/enbility/spine-go/model"
 	"github.com/enbility/spine-go/util"
@@ -27,35 +28,25 @@ func (o *OHPCF) OptionalPowerConsumptionAvailable(entity spineapi.EntityRemoteIn
 
 	if data.Alternatives[0].PowerSequence[0].State != nil &&
 		data.Alternatives[0].PowerSequence[0].State.State != nil {
-		return *data.Alternatives[0].PowerSequence[0].State.State == model.PowerSequenceStateTypeInactive, nil
+		return *data.Alternatives[0].PowerSequence[0].State.State == model.PowerSequenceStateTypeInactive ||
+			*data.Alternatives[0].PowerSequence[0].State.State == model.PowerSequenceStateTypeScheduled, nil
 	}
 
 	return false, nil
 }
 
-// The power value [OHPCF-011/2/1 or 2].
+// The power value [OHPCF-011/2/1].
 //
 // return the power value
-func (o *OHPCF) Power(entity spineapi.EntityRemoteInterface) (float64, error) {
-	data, err := o.checkEntityTypeAndGetData(entity)
-	if err != nil {
-		return 0, err
-	}
+func (o *OHPCF) RequestedPowerEstimate(entity spineapi.EntityRemoteInterface) (float64, error) {
+	return o.powerOfType(entity, model.PowerTimeSlotValueTypeTypePower)
+}
 
-	if !o.isDataAvailable(data) {
-		return 0, api.ErrDataNotAvailable
-	}
-
-	if data.Alternatives[0].PowerSequence[0].PowerTimeSlot != nil &&
-		len(data.Alternatives[0].PowerSequence[0].PowerTimeSlot) == 1 &&
-		data.Alternatives[0].PowerSequence[0].PowerTimeSlot[0].ValueList != nil &&
-		data.Alternatives[0].PowerSequence[0].PowerTimeSlot[0].ValueList.Value != nil &&
-		len(data.Alternatives[0].PowerSequence[0].PowerTimeSlot[0].ValueList.Value) == 1 &&
-		data.Alternatives[0].PowerSequence[0].PowerTimeSlot[0].ValueList.Value[0].Value != nil {
-		return data.Alternatives[0].PowerSequence[0].PowerTimeSlot[0].ValueList.Value[0].Value.GetValue(), nil
-	}
-
-	return 0, api.ErrDataNotAvailable
+// The max power value [OHPCF-011/2/2].
+//
+// return the maximal power value
+func (o *OHPCF) RequestPowerMax(entity spineapi.EntityRemoteInterface) (float64, error) {
+	return o.powerOfType(entity, model.PowerTimeSlotValueTypeTypePowerMax)
 }
 
 // Indication whether the consumption may be stopped by the CEM [OHPCF-011/5].
@@ -63,6 +54,7 @@ func (o *OHPCF) Power(entity spineapi.EntityRemoteInterface) (float64, error) {
 // return true if the consumption may be stopped
 func (o *OHPCF) ConsumptionIsStoppable(entity spineapi.EntityRemoteInterface) (bool, error) {
 	data, err := o.checkEntityTypeAndGetData(entity)
+
 	if err != nil {
 		return false, err
 	}
@@ -131,7 +123,7 @@ func (o *OHPCF) PowerConsumptionProcessState(entity spineapi.EntityRemoteInterfa
 	}
 
 	if !o.isDataAvailable(data) {
-		return "", api.ErrDataNotAvailable
+		return ucapi.CompressorPowerConsumptionStateStopped, nil
 	}
 
 	if data.Alternatives[0].PowerSequence[0].State != nil &&
@@ -209,21 +201,8 @@ func (o *OHPCF) PowerConsumptionMinimalPauseDuration(entity spineapi.EntityRemot
 //
 // parameters:
 //   - start: The start time of the power consumption
-func (o *OHPCF) SchedulePowerConsumptionProcess(entity spineapi.EntityRemoteInterface, start time.Time, callback func(msg spineapi.ResponseMessage)) (*model.MsgCounterType, error) {
-	if !o.IsCompatibleEntityType(entity) {
-		return nil, api.ErrNoCompatibleEntity
-	}
-
-	smartEnergyManagementPs, err := client.NewSmartEnergyManagementPs(o.LocalEntity, entity)
-	if err != nil {
-		return nil, err
-	}
-
-	if callback != nil {
-		smartEnergyManagementPs.AddResultCallback(callback)
-	}
-
-	return smartEnergyManagementPs.WriteData(&model.SmartEnergyManagementPsDataType{
+func (o *OHPCF) SchedulePowerConsumptionProcess(entity spineapi.EntityRemoteInterface, start time.Time, resultCB func(result model.ResultDataType)) (*model.MsgCounterType, error) {
+	data := &model.SmartEnergyManagementPsDataType{
 		Alternatives: []model.SmartEnergyManagementPsAlternativesType{{
 			PowerSequence: []model.SmartEnergyManagementPsPowerSequenceType{{
 				Schedule: &model.PowerSequenceScheduleDataType{
@@ -231,25 +210,14 @@ func (o *OHPCF) SchedulePowerConsumptionProcess(entity spineapi.EntityRemoteInte
 				},
 			}},
 		}},
-	})
+	}
+
+	return o.writeSmartEnergyManagementData(entity, data, resultCB)
 }
 
 // stop (abort) the process [OHPCF-022/1].
-func (o *OHPCF) StopAbortPowerConsumptionProcess(entity spineapi.EntityRemoteInterface, callback func(msg spineapi.ResponseMessage)) (*model.MsgCounterType, error) {
-	if !o.IsCompatibleEntityType(entity) {
-		return nil, api.ErrNoCompatibleEntity
-	}
-
-	smartEnergyManagementPs, err := client.NewSmartEnergyManagementPs(o.LocalEntity, entity)
-	if err != nil {
-		return nil, err
-	}
-
-	if callback != nil {
-		smartEnergyManagementPs.AddResultCallback(callback)
-	}
-
-	return smartEnergyManagementPs.WriteData(&model.SmartEnergyManagementPsDataType{
+func (o *OHPCF) AbortPowerConsumptionProcess(entity spineapi.EntityRemoteInterface, resultCB func(result model.ResultDataType)) (*model.MsgCounterType, error) {
+	data := &model.SmartEnergyManagementPsDataType{
 		Alternatives: []model.SmartEnergyManagementPsAlternativesType{{
 			PowerSequence: []model.SmartEnergyManagementPsPowerSequenceType{{
 				State: &model.PowerSequenceStateDataType{
@@ -257,25 +225,14 @@ func (o *OHPCF) StopAbortPowerConsumptionProcess(entity spineapi.EntityRemoteInt
 				},
 			}},
 		}},
-	})
+	}
+
+	return o.writeSmartEnergyManagementData(entity, data, resultCB)
 }
 
 // pause the process [OHPCF-022/2].
-func (o *OHPCF) PausePowerConsumptionProcess(entity spineapi.EntityRemoteInterface, callback func(msg spineapi.ResponseMessage)) (*model.MsgCounterType, error) {
-	if !o.IsCompatibleEntityType(entity) {
-		return nil, api.ErrNoCompatibleEntity
-	}
-
-	smartEnergyManagementPs, err := client.NewSmartEnergyManagementPs(o.LocalEntity, entity)
-	if err != nil {
-		return nil, err
-	}
-
-	if callback != nil {
-		smartEnergyManagementPs.AddResultCallback(callback)
-	}
-
-	return smartEnergyManagementPs.WriteData(&model.SmartEnergyManagementPsDataType{
+func (o *OHPCF) PausePowerConsumptionProcess(entity spineapi.EntityRemoteInterface, resultCB func(result model.ResultDataType)) (*model.MsgCounterType, error) {
+	data := &model.SmartEnergyManagementPsDataType{
 		Alternatives: []model.SmartEnergyManagementPsAlternativesType{{
 			PowerSequence: []model.SmartEnergyManagementPsPowerSequenceType{{
 				State: &model.PowerSequenceStateDataType{
@@ -283,25 +240,14 @@ func (o *OHPCF) PausePowerConsumptionProcess(entity spineapi.EntityRemoteInterfa
 				},
 			}},
 		}},
-	})
+	}
+
+	return o.writeSmartEnergyManagementData(entity, data, resultCB)
 }
 
 // resume the process [OHPCF-022/3].
-func (o *OHPCF) ResumePowerConsumptionProcess(entity spineapi.EntityRemoteInterface, callback func(msg spineapi.ResponseMessage)) (*model.MsgCounterType, error) {
-	if !o.IsCompatibleEntityType(entity) {
-		return nil, api.ErrNoCompatibleEntity
-	}
-
-	smartEnergyManagementPs, err := client.NewSmartEnergyManagementPs(o.LocalEntity, entity)
-	if err != nil {
-		return nil, err
-	}
-
-	if callback != nil {
-		smartEnergyManagementPs.AddResultCallback(callback)
-	}
-
-	return smartEnergyManagementPs.WriteData(&model.SmartEnergyManagementPsDataType{
+func (o *OHPCF) ResumePowerConsumptionProcess(entity spineapi.EntityRemoteInterface, resultCB func(result model.ResultDataType)) (*model.MsgCounterType, error) {
+	data := &model.SmartEnergyManagementPsDataType{
 		Alternatives: []model.SmartEnergyManagementPsAlternativesType{{
 			PowerSequence: []model.SmartEnergyManagementPsPowerSequenceType{{
 				State: &model.PowerSequenceStateDataType{
@@ -309,7 +255,9 @@ func (o *OHPCF) ResumePowerConsumptionProcess(entity spineapi.EntityRemoteInterf
 				},
 			}},
 		}},
-	})
+	}
+
+	return o.writeSmartEnergyManagementData(entity, data, resultCB)
 }
 
 // ------------------------ helper methods ------------------------ //
@@ -336,4 +284,60 @@ func (o *OHPCF) isDataAvailable(data *model.SmartEnergyManagementPsDataType) boo
 	return len(data.Alternatives) == 1 &&
 		data.Alternatives[0].PowerSequence != nil &&
 		len(data.Alternatives[0].PowerSequence) == 1
+}
+
+func (o *OHPCF) powerOfType(entity spineapi.EntityRemoteInterface, valueType model.PowerTimeSlotValueTypeType) (float64, error) {
+	data, err := o.checkEntityTypeAndGetData(entity)
+	if err != nil {
+		return 0, err
+	}
+
+	if !o.isDataAvailable(data) {
+		return 0, api.ErrDataNotAvailable
+	}
+
+	if data.Alternatives[0].PowerSequence[0].PowerTimeSlot != nil &&
+		len(data.Alternatives[0].PowerSequence[0].PowerTimeSlot) == 1 &&
+		data.Alternatives[0].PowerSequence[0].PowerTimeSlot[0].ValueList != nil &&
+		data.Alternatives[0].PowerSequence[0].PowerTimeSlot[0].ValueList.Value != nil {
+
+		for _, value := range data.Alternatives[0].PowerSequence[0].PowerTimeSlot[0].ValueList.Value {
+			if value.Value != nil && value.ValueType != nil && *value.ValueType == valueType {
+				return value.Value.GetValue(), nil
+			}
+		}
+	}
+
+	return 0, api.ErrDataNotAvailable
+}
+
+func (o *OHPCF) writeSmartEnergyManagementData(entity spineapi.EntityRemoteInterface, data *model.SmartEnergyManagementPsDataType, resultCB func(result model.ResultDataType)) (*model.MsgCounterType, error) {
+	if !o.IsCompatibleEntityType(entity) {
+		return nil, api.ErrNoCompatibleEntity
+	}
+
+	smartEnergyManagementPs, err := client.NewSmartEnergyManagementPs(o.LocalEntity, entity)
+	if err != nil {
+		return nil, err
+	}
+
+	msgCounter, err := smartEnergyManagementPs.WriteData(data)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if resultCB != nil && msgCounter != nil {
+		cb := func(msg spineapi.ResponseMessage) {
+			response, ok := msg.Data.(*model.ResultDataType)
+			if ok {
+				resultCB(*response)
+			}
+		}
+		if errCB := smartEnergyManagementPs.AddResponseCallback(*msgCounter, cb); errCB != nil {
+			logging.Log().Debug("Failed to add response callback for msgCounter %v: %v", msgCounter, errCB)
+		}
+	}
+
+	return msgCounter, nil
 }

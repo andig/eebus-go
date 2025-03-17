@@ -36,9 +36,9 @@ func NewOHPCF(localEntity spineapi.EntityLocalInterface, eventCB api.EntityEvent
 	usecase := usecase.NewUseCaseBase(
 		localEntity,
 		model.UseCaseActorTypeCEM,
-		model.UseCaseNameTypeEVStateOfCharge,
+		model.UseCaseNameTypeOptimizationOfSelfConsumptionByHeatPumpCompressorFlexibility,
 		"1.0.0",
-		"RC1",
+		"release",
 		useCaseScenarios,
 		eventCB,
 		UseCaseSupportUpdate,
