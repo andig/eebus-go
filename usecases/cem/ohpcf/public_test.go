@@ -68,10 +68,10 @@ func (s *CemOhPCFSuite) Test_Power() {
 }
 
 func (s *CemOhPCFSuite) Test_MaxPower() {
-	_, err := s.sut.RequestPowerMax(s.mockRemoteEntity)
+	_, err := s.sut.RequestedPowerMax(s.mockRemoteEntity)
 	assert.NotNil(s.T(), err)
 
-	_, err = s.sut.RequestPowerMax(s.monitoredEntity)
+	_, err = s.sut.RequestedPowerMax(s.monitoredEntity)
 	assert.NotNil(s.T(), err)
 
 	data := &model.SmartEnergyManagementPsDataType{
@@ -93,7 +93,7 @@ func (s *CemOhPCFSuite) Test_MaxPower() {
 	_, fErr := rFeature.UpdateData(true, model.FunctionTypeSmartEnergyManagementPsData, data, nil, nil)
 	assert.Nil(s.T(), fErr)
 
-	available, err := s.sut.RequestPowerMax(s.monitoredEntity)
+	available, err := s.sut.RequestedPowerMax(s.monitoredEntity)
 	assert.Nil(s.T(), err)
 	assert.Equal(s.T(), 1006.0, available)
 }

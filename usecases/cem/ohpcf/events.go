@@ -47,9 +47,9 @@ func (o *OHPCF) loadSmartEnergyManagementPsDataType(payload spineapi.EventPayloa
 				if value.Value != nil &&
 					value.ValueType != nil {
 					if *value.ValueType == model.PowerTimeSlotValueTypeTypePower {
-						o.EventCB(payload.Ski, payload.Device, payload.Entity, DataUpdatePower)
+						o.EventCB(payload.Ski, payload.Device, payload.Entity, DataUpdateRequestedPowerEstimate)
 					} else if *value.ValueType == model.PowerTimeSlotValueTypeTypePowerMax {
-						o.EventCB(payload.Ski, payload.Device, payload.Entity, DataUpdateMaxPower)
+						o.EventCB(payload.Ski, payload.Device, payload.Entity, DataUpdateRequestedPowerMax)
 					}
 				}
 			}
@@ -94,6 +94,6 @@ func (o *OHPCF) loadSmartEnergyManagementPsDataType(payload spineapi.EventPayloa
 
 	} else if len(data.Alternatives) == 0 {
 		// [OHPCF-003], [OHPCF-006/2]
-		o.EventCB(payload.Ski, payload.Device, payload.Entity, DataUpdateOptionalPowerConsumptionStopped)
+		o.EventCB(payload.Ski, payload.Device, payload.Entity, DataUpdateConsumptionState)
 	}
 }

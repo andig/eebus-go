@@ -25,7 +25,7 @@ type CemOHPCFInterface interface {
 	// The maximal value for the requested power estimate [OHPCF-011/2/1].
 	//
 	// return the maximal value for the requested power estimate
-	RequestPowerMax(entity spineapi.EntityRemoteInterface) (float64, error)
+	RequestedPowerMax(entity spineapi.EntityRemoteInterface) (float64, error)
 
 	// Indication whether the consumption may be stopped by the CEM [OHPCF-011/5].
 	//

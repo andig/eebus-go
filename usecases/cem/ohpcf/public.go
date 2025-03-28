@@ -45,7 +45,7 @@ func (o *OHPCF) RequestedPowerEstimate(entity spineapi.EntityRemoteInterface) (f
 // The max power value [OHPCF-011/2/2].
 //
 // return the maximal power value
-func (o *OHPCF) RequestPowerMax(entity spineapi.EntityRemoteInterface) (float64, error) {
+func (o *OHPCF) RequestedPowerMax(entity spineapi.EntityRemoteInterface) (float64, error) {
 	return o.powerOfType(entity, model.PowerTimeSlotValueTypeTypePowerMax)
 }
 

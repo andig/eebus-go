@@ -7,9 +7,9 @@ const (
 
 	// Scenario 1
 
-	DataUpdatePower api.EventType = "cem-ohpcf-DataUpdatePower"
+	DataUpdateRequestedPowerEstimate api.EventType = "cem-ohpcf-DataUpdateRequestedPowerEstimate"
 
-	DataUpdateMaxPower api.EventType = "cem-ohpcf-DataUpdateMaxPower"
+	DataUpdateRequestedPowerMax api.EventType = "cem-ohpcf-DataUpdateRequestedPowerMax"
 
 	DataUpdateConsumptionIsStoppable api.EventType = "cem-ohpcf-DataUpdateConsumptionIsStoppable"
 
@@ -18,8 +18,6 @@ const (
 	DataUpdateConsumptionStartTime api.EventType = "cem-ohpcf-DataUpdateConsumptionStartTime"
 
 	DataUpdateConsumptionState api.EventType = "cem-ohpcf-DataUpdateConsumptionState"
-
-	DataUpdateOptionalPowerConsumptionStopped api.EventType = "cem-ohpcf-DataUpdateOptionalPowerConsumptionStopped"
 
 	DataUpdateMinimalRunDuration api.EventType = "cem-ohpcf-DataUpdateMinimalRunDuration"
 
