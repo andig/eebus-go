@@ -1,6 +1,7 @@
 package ohpcf
 
 import (
+	"github.com/enbility/eebus-go/usecases/internal"
 	spineapi "github.com/enbility/spine-go/api"
 	"github.com/enbility/spine-go/model"
 )
@@ -11,6 +12,12 @@ func (o *OHPCF) HandleEvent(payload spineapi.EventPayload) {
 
 	if !o.IsCompatibleEntityType(payload.Entity) {
 		return
+	}
+
+	if internal.IsEntityAdded(payload) {
+		localFeature := o.LocalEntity.FeatureOfTypeAndRole(model.FeatureTypeTypeSmartEnergyManagementPs, model.RoleTypeClient)
+		remoteFeature := payload.Entity.FeatureOfTypeAndRole(model.FeatureTypeTypeSmartEnergyManagementPs, model.RoleTypeServer)
+		localFeature.SubscribeToRemote(remoteFeature.Address())
 	}
 
 	if payload.Data == nil {
