@@ -97,7 +97,7 @@ func (h *controlbox) run() {
 		return
 	}
 
-	localEntity := h.myService.LocalDevice().EntityForType(model.EntityTypeTypeGridGuard)
+	localEntity := h.myService.LocalDevice().EntityForType(model.EntityTypeTypeHeatPumpAppliance)
 	h.uclpc = lpc.NewLPC(localEntity, h.OnLPCEvent)
 	h.myService.AddUseCase(h.uclpc)
 	// h.uclpp = lpp.NewLPP(localEntity, h.OnLPPEvent)
