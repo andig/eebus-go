@@ -42,7 +42,7 @@ This includes example code for sending an LPC limit 5 seconds after connecting t
 #### First Run
 
 ```sh
-go run cmd/controlbox/main.go 4713
+go run examples/controlbox/main.go 4713
 ```
 
 `4713` is the example server port that this process should listen on
@@ -52,7 +52,7 @@ The certificate and key and the local SKI will be generated and printed. You sho
 #### General Usage
 
 ```sh
-Usage: go run cmd/controlbox/main.go <serverport> <remoteski> <certfile> <keyfile>
+Usage: go run examples/controlbox/main.go <serverport> <remoteski> <certfile> <keyfile>
 ```
 
 - `remoteski` is the SKI of the remote device or service you want to connect to
@@ -66,7 +66,7 @@ This includes example code for accepting LPC and LPP limits from a control box, 
 #### First Run
 
 ```sh
-go run cmd/hems/main.go 4714
+go run examples/hems/main.go 4714
 ```
 
 `4714` is the example server port that this process should listen on
@@ -76,7 +76,7 @@ The certificate and key and the local SKI will be generated and printed. You sho
 #### General Usage
 
 ```sh
-Usage: go run cmd/hems/main.go <serverport> <remoteski> <certfile> <keyfile>
+Usage: go run examples/hems/main.go <serverport> <remoteski> <certfile> <keyfile>
 ```
 
 - `remoteski` is the SKI of the remote device or service you want to connect to
@@ -90,7 +90,7 @@ This includes example code for accepting LPC from a control box.
 #### First Run
 
 ```sh
-go run cmd/hems/main.go 4715
+go run examples/hems/main.go 4715
 ```
 
 `4715` is the example server port that this process should listen on
@@ -100,7 +100,7 @@ The certificate and key and the local SKI will be generated and printed. You sho
 #### General Usage
 
 ```sh
-Usage: go run cmd/evse/main.go <serverport> <remoteski> <certfile> <keyfile>
+Usage: go run examples/evse/main.go <serverport> <remoteski> <certfile> <keyfile>
 ```
 
 - `remoteski` is the SKI of the remote device or service you want to connect to
