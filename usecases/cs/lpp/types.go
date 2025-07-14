@@ -12,15 +12,17 @@ const (
 	//
 	// Use `ProductionLimit` to get the current data
 	//
-	// Use Case LPC, Scenario 1
+	// Use Case LPP, Scenario 1
 	DataUpdateLimit api.EventType = "cs-lpp-DataUpdateLimit"
 
 	// An incoming load control obligation limit needs to be approved or denied
 	//
-	// Use `PendingProductionLimits` to get the currently pending write approval requests
-	// and invoke `ApproveOrDenyProductionLimit` for each
+	// Use `PendingProductionLimits` and `PendingDeviceConfigurations` to get
+	// the currently pending write approval requests and invoke
+	// `ApproveOrDenyProductionLimit` or `ApproveOrDenyDeviceConfiguration` for
+	// each
 	//
-	// Use Case LPC, Scenario 1
+	// Use Case LPP, Scenario 1
 	WriteApprovalRequired api.EventType = "cs-lpp-WriteApprovalRequired"
 
 	// Failsafe limit for the produced active (real) power of the
@@ -28,7 +30,7 @@ const (
 	//
 	// Use `FailsafeProductionActivePowerLimit` to get the current data
 	//
-	// Use Case LPC, Scenario 2
+	// Use Case LPP, Scenario 2
 	DataUpdateFailsafeProductionActivePowerLimit api.EventType = "cs-lpp-DataUpdateFailsafeProductionActivePowerLimit"
 
 	// Minimum time the Controllable System remains in "failsafe state" unless conditions
@@ -36,7 +38,7 @@ const (
 	//
 	// Use `FailsafeDurationMinimum` to get the current data
 	//
-	// Use Case LPC, Scenario 2
+	// Use Case LPP, Scenario 2
 	DataUpdateFailsafeDurationMinimum api.EventType = "cs-lpp-DataUpdateFailsafeDurationMinimum"
 
 	// Indicates a notify heartbeat event the application should care of.
