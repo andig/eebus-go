@@ -233,7 +233,7 @@ func (e *LPC) deviceConfigurationWriteCB(msg *spineapi.Message) {
 	for _, deviceKeyValueData := range data.DeviceConfigurationKeyValueData {
 		description, err := dc.GetKeyValueDescriptionFoKeyId(*deviceKeyValueData.KeyId)
 		if description == nil || err != nil {
-			logging.Log().Debug("LPC deviceConfigurationWriteCB: no device configuration for KeyID %d found")
+			logging.Log().Debug("LPC deviceConfigurationWriteCB: no device configuration for KeyID found: ", *deviceKeyValueData.KeyId)
 			continue
 		}
 
