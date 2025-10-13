@@ -41,7 +41,7 @@ const (
 	// Use `CurrentPerPhase` to get the current data
 	//
 	// Use Case MCP, Scenario 3
-	DataUpdateCurrentsPerPhase api.EventType = "ma-mpc-DataUpdateCurrentsPerPhase"
+	DataUpdateCurrentPerPhase api.EventType = "ma-mpc-DataUpdateCurrentPerPhase"
 
 	// Phase specific voltage
 	//
