@@ -316,9 +316,17 @@ func (o *OHPCF) SchedulePowerConsumptionProcess(entity spineapi.EntityRemoteInte
 
 // stop (abort) the process [OHPCF-022/1].
 func (o *OHPCF) AbortPowerConsumptionProcess(entity spineapi.EntityRemoteInterface, resultCB func(result model.ResultDataType)) (*model.MsgCounterType, error) {
+	info, err := o.OptionalPowerConsumption(entity)
+	if err != nil {
+		return nil, err
+	}
+	
 	data := &model.SmartEnergyManagementPsDataType{
 		Alternatives: []model.SmartEnergyManagementPsAlternativesType{{
 			PowerSequence: []model.SmartEnergyManagementPsPowerSequenceType{{
+				Description: &model.PowerSequenceDescriptionDataType{
+					SequenceId: util.Ptr(info.PowerSequenceId),
+				},
 				State: &model.PowerSequenceStateDataType{
 					State: util.Ptr(model.PowerSequenceStateTypeInvalid),
 				},
@@ -331,9 +339,17 @@ func (o *OHPCF) AbortPowerConsumptionProcess(entity spineapi.EntityRemoteInterfa
 
 // pause the process [OHPCF-022/2].
 func (o *OHPCF) PausePowerConsumptionProcess(entity spineapi.EntityRemoteInterface, resultCB func(result model.ResultDataType)) (*model.MsgCounterType, error) {
+	info, err := o.OptionalPowerConsumption(entity)
+	if err != nil {
+		return nil, err
+	}
+
 	data := &model.SmartEnergyManagementPsDataType{
 		Alternatives: []model.SmartEnergyManagementPsAlternativesType{{
 			PowerSequence: []model.SmartEnergyManagementPsPowerSequenceType{{
+				Description: &model.PowerSequenceDescriptionDataType{
+					SequenceId: util.Ptr(info.PowerSequenceId),
+				},
 				State: &model.PowerSequenceStateDataType{
 					State: util.Ptr(model.PowerSequenceStateTypeScheduledPaused),
 				},
@@ -346,9 +362,17 @@ func (o *OHPCF) PausePowerConsumptionProcess(entity spineapi.EntityRemoteInterfa
 
 // resume the process [OHPCF-022/3].
 func (o *OHPCF) ResumePowerConsumptionProcess(entity spineapi.EntityRemoteInterface, resultCB func(result model.ResultDataType)) (*model.MsgCounterType, error) {
+	info, err := o.OptionalPowerConsumption(entity)
+	if err != nil {
+		return nil, err
+	}
+	
 	data := &model.SmartEnergyManagementPsDataType{
 		Alternatives: []model.SmartEnergyManagementPsAlternativesType{{
 			PowerSequence: []model.SmartEnergyManagementPsPowerSequenceType{{
+				Description: &model.PowerSequenceDescriptionDataType{
+					SequenceId: util.Ptr(info.PowerSequenceId),
+				},
 				State: &model.PowerSequenceStateDataType{
 					State: util.Ptr(model.PowerSequenceStateTypeRunning),
 				},
