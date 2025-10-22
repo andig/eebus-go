@@ -351,7 +351,7 @@ func (o *OHPCF) PausePowerConsumptionProcess(entity spineapi.EntityRemoteInterfa
 					SequenceId: util.Ptr(info.PowerSequenceId),
 				},
 				State: &model.PowerSequenceStateDataType{
-					State: util.Ptr(model.PowerSequenceStateTypeScheduledPaused),
+					State: util.Ptr(model.PowerSequenceStateTypePaused),
 				},
 			}},
 		}},
