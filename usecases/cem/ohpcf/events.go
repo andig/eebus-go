@@ -1,7 +1,9 @@
 package ohpcf
 
 import (
+	"github.com/enbility/eebus-go/features/client"
 	"github.com/enbility/eebus-go/usecases/internal"
+	"github.com/enbility/ship-go/logging"
 	spineapi "github.com/enbility/spine-go/api"
 	"github.com/enbility/spine-go/model"
 )
@@ -15,9 +17,7 @@ func (o *OHPCF) HandleEvent(payload spineapi.EventPayload) {
 	}
 
 	if internal.IsEntityAdded(payload) {
-		localFeature := o.LocalEntity.FeatureOfTypeAndRole(model.FeatureTypeTypeSmartEnergyManagementPs, model.RoleTypeClient)
-		remoteFeature := payload.Entity.FeatureOfTypeAndRole(model.FeatureTypeTypeSmartEnergyManagementPs, model.RoleTypeServer)
-		localFeature.SubscribeToRemote(remoteFeature.Address())
+		o.connected(payload.Entity)
 	}
 
 	if payload.Data == nil {
@@ -28,6 +28,22 @@ func (o *OHPCF) HandleEvent(payload spineapi.EventPayload) {
 	case *model.SmartEnergyManagementPsDataType:
 		o.loadSmartEnergyManagementPsDataType(payload)
 		break
+	}
+}
+
+func (o *OHPCF) connected(entity spineapi.EntityRemoteInterface) {
+	if semp, err := client.NewSmartEnergyManagementPs(o.LocalEntity, entity); err == nil {
+		if !semp.HasSubscription() {
+			if _, err := semp.Subscribe(); err != nil {
+				logging.Log().Debug(err)
+			}
+		}
+
+		if !semp.HasBinding() {
+			if _, err := semp.Bind(); err != nil {
+				logging.Log().Debug(err)
+			}
+		}
 	}
 }
 
