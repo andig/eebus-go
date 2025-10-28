@@ -22,7 +22,7 @@ func (o *OHPCF) OptionalPowerConsumption(entity spineapi.EntityRemoteInterface) 
 	}
 
 	if !o.isDataAvailable(data) {
-		return nil, nil
+		return nil, api.ErrDataNotAvailable
 	}
 
 	alt := data.Alternatives
