@@ -12,6 +12,11 @@ type CemOHPCFInterface interface {
 
 	// Scenario 1
 
+	// Get all relevant info for an available power consumption
+	//
+	// return OptionalPowerConsumptionInfo struct with all available info if an optional power consumption has been announced
+	OptionalPowerConsumption(entity spineapi.EntityRemoteInterface) (*OptionalPowerConsumptionInfo, error)
+
 	// The availability of an optional consumption of power [OHPCF-011/1].
 	//
 	// return true if the optional consumption of power is possible
