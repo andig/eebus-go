@@ -103,6 +103,23 @@ func (e *LPP) connected(entity spineapi.EntityRemoteInterface) {
 			logging.Log().Debug(err)
 		}
 	}
+
+	if electricalConnection, err := client.NewElectricalConnection(e.LocalEntity, entity); err == nil {
+		if !electricalConnection.HasSubscription() {
+			if _, err := electricalConnection.Subscribe(); err != nil {
+				logging.Log().Debug(err)
+			}
+		}
+
+		// get characteristics
+		selector := &model.ElectricalConnectionCharacteristicListDataSelectorsType{
+			CharacteristicContext: util.Ptr(model.ElectricalConnectionCharacteristicContextTypeEntity),
+			CharacteristicType:    util.Ptr(e.characteristicType(entity)),
+		}
+		if _, err := electricalConnection.RequestCharacteristics(selector, nil); err != nil {
+			logging.Log().Debug(err)
+		}
+	}
 }
 
 // the load control limit description data was updated
