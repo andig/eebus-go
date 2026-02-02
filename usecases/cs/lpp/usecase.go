@@ -12,7 +12,6 @@ import (
 	"github.com/enbility/ship-go/logging"
 	spineapi "github.com/enbility/spine-go/api"
 	"github.com/enbility/spine-go/model"
-	"github.com/enbility/spine-go/spine"
 	"github.com/enbility/spine-go/util"
 )
 
@@ -80,7 +79,7 @@ func NewLPP(localEntity spineapi.EntityLocalInterface, eventCB api.EntityEventCa
 		pendingLimits: make(map[model.MsgCounterType]*spineapi.Message),
 	}
 
-	_ = spine.Events.Subscribe(uc)
+	_ = localEntity.Device().Events().Subscribe(uc)
 
 	return uc
 }
