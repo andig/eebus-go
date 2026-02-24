@@ -42,6 +42,9 @@ func (e *LPP) HandleEvent(payload spineapi.EventPayload) {
 
 	case *model.DeviceConfigurationKeyValueListDataType:
 		e.configurationDataUpdate(payload)
+
+	case *model.ElectricalConnectionCharacteristicListDataType:
+		e.electricalConnectionCharacteristicDataUpdate(payload)
 	}
 }
 
@@ -118,6 +121,23 @@ func (e *LPP) connected(entity spineapi.EntityRemoteInterface) {
 		}
 		if _, err := electricalConnection.RequestCharacteristics(selector, nil); err != nil {
 			logging.Log().Debug(err)
+		}
+	}
+}
+
+// the electrical connection power production nominal max was updated
+func (e *LPP) electricalConnectionCharacteristicDataUpdate(payload spineapi.EventPayload) {
+	if electricalConnection, err := client.NewElectricalConnection(e.LocalEntity, payload.Entity); err == nil {
+		filter := model.ElectricalConnectionCharacteristicDataType{
+			ElectricalConnectionId: util.Ptr(model.ElectricalConnectionIdType(0)),
+			ParameterId:            util.Ptr(model.ElectricalConnectionParameterIdType(0)),
+			CharacteristicId:       util.Ptr(model.ElectricalConnectionCharacteristicIdType(0)),
+			CharacteristicType:     util.Ptr(e.characteristicType(payload.Entity)),
+			CharacteristicContext:  util.Ptr(model.ElectricalConnectionCharacteristicContextTypeEntity),
+		}
+
+		if electricalConnection.CheckEventPayloadDataForFilterDescriptionList(payload.Data, filter) && e.EventCB != nil {
+			e.EventCB(payload.Ski, payload.Device, payload.Entity, DataUpdatePowerProductionNominalMax)
 		}
 	}
 }
