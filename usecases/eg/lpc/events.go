@@ -130,7 +130,6 @@ func (e *LPC) electricalConnectionCharacteristicDataUpdate(payload spineapi.Even
 		filter := model.ElectricalConnectionCharacteristicDataType{
 			ElectricalConnectionId: util.Ptr(model.ElectricalConnectionIdType(0)),
 			ParameterId:            util.Ptr(model.ElectricalConnectionParameterIdType(0)),
-			CharacteristicId:       util.Ptr(model.ElectricalConnectionCharacteristicIdType(0)),
 			CharacteristicType:     util.Ptr(e.characteristicType(payload.Entity)),
 			CharacteristicContext:  util.Ptr(model.ElectricalConnectionCharacteristicContextTypeEntity),
 		}
