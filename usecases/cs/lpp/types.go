@@ -17,16 +17,16 @@ const (
 
 	// An incoming load control obligation limit needs to be approved or denied
 	//
-	// Use `PendingProductionLimits` to get the currently pending limit write
-	// approval requests and invoke `ApproveOrDenyProductionLimit` for each
+	// Use `PendingProductionLimits` to get the currently pending produciton limits
+	// awaiting approval and invoke `ApproveOrDenyProductionLimit` for each
 	//
 	// Use Case LPP, Scenario 1
 	LimitWriteApprovalRequired api.EventType = "cs-lpp-LimitWriteApprovalRequired"
 
 	// An incoming device configuration write needs to be approved or denied
 	//
-	// Use `PendingDeviceConfigurations` to get the currently pending device configuration
-	// write approval requests and invoke `ApproveOrDenyDeviceConfiguration` for each
+	// Use `PendingDeviceConfigurations` to get the currently pending device configurations
+	// awaiting approval and invoke `ApproveOrDenyDeviceConfiguration` for each
 	//
 	// Use Case LPP, Scenario 1
 	ConfigurationWriteApprovalRequired api.EventType = "cs-lpp-ConfigurationWriteApprovalRequired"
