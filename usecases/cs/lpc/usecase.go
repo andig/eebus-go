@@ -199,11 +199,6 @@ func (e *LPC) approveOrDenyDeviceConfiguration(msg *spineapi.Message, approve bo
 // the implementation only considers write messages for this use case and
 // approves all others
 func (e *LPC) deviceConfigurationWriteCB(msg *spineapi.Message) {
-	if msg.RequestHeader == nil || msg.RequestHeader.MsgCounter == nil {
-		logging.Log().Debug("LPC deviceConfigurationWriteCB: invalid message")
-		return
-	}
-
 	configsToApprove := map[model.DeviceConfigurationKeyNameType]struct{}{
 		model.DeviceConfigurationKeyNameTypeFailsafeConsumptionActivePowerLimit: {},
 		model.DeviceConfigurationKeyNameTypeFailsafeDurationMinimum:             {},

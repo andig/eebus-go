@@ -62,7 +62,7 @@ func GroupPendingDeviceConfigurations(pendingDeviceConfigs map[model.MsgCounterT
 
 	dc, err := server.NewDeviceConfiguration(localEntity)
 	if err != nil {
-		logging.Log().Debugf("AggregatePendingDeviceConfigurations: Error occurred when getting device configuration: %s", err.Error())
+		logging.Log().Debugf("GroupPendingDeviceConfigurations: Error occurred when getting device configuration: %s", err.Error())
 		return result
 	}
 

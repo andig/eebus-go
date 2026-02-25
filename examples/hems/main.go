@@ -164,11 +164,9 @@ func (h *hems) OnLPCEvent(ski string, device spineapi.DeviceRemoteInterface, ent
 		for msgCounter, configs := range pendingDeviceConfigWrites {
 			fmt.Printf("Approving LPC device config write with msgCounter %d for features: ", msgCounter)
 			for _, config := range configs {
-				keyName := "nil"
 				if config.Description.KeyName != nil {
-					keyName = string(*config.Description.KeyName)
+					fmt.Printf("%s ", string(*config.Description.KeyName))
 				}
-				fmt.Printf("%s ", keyName)
 			}
 			fmt.Print("\n")
 			h.uccslpc.ApproveOrDenyDeviceConfiguration(msgCounter, true, "")
@@ -201,11 +199,9 @@ func (h *hems) OnLPPEvent(ski string, device spineapi.DeviceRemoteInterface, ent
 		for msgCounter, configs := range pendingDeviceConfigWrites {
 			fmt.Printf("Approving LPP device config write with msgCounter %d for features: ", msgCounter)
 			for _, config := range configs {
-				keyName := "nil"
 				if config.Description.KeyName != nil {
-					keyName = string(*config.Description.KeyName)
+					fmt.Printf("%s ", string(*config.Description.KeyName))
 				}
-				fmt.Printf("%s ", keyName)
 			}
 			fmt.Print("\n")
 			h.uccslpp.ApproveOrDenyDeviceConfiguration(msgCounter, true, "")
