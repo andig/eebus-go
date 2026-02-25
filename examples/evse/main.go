@@ -151,7 +151,7 @@ func (h *evse) OnLPCEvent(ski string, device spineapi.DeviceRemoteInterface, ent
 	}
 
 	switch event {
-	case lpc.WriteApprovalRequired:
+	case lpc.LimitWriteApprovalRequired:
 		// get pending writes
 		pendingWrites := h.uclpc.PendingConsumptionLimits()
 

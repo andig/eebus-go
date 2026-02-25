@@ -7,6 +7,7 @@ import (
 	"github.com/enbility/eebus-go/api"
 	"github.com/enbility/eebus-go/features/server"
 	ucapi "github.com/enbility/eebus-go/usecases/api"
+	"github.com/enbility/eebus-go/usecases/internal"
 	"github.com/enbility/spine-go/model"
 	"github.com/enbility/spine-go/util"
 )
@@ -272,38 +273,10 @@ func (e *LPC) SetFailsafeDurationMinimum(duration time.Duration, changeable bool
 
 // return the currently pending incoming failsafe consumption limit writes
 func (e *LPC) PendingDeviceConfigurations() map[model.MsgCounterType][]ucapi.PendingDeviceConfiguration {
-	result := make(map[model.MsgCounterType][]ucapi.PendingDeviceConfiguration)
-
 	e.pendingDeviceConfigMux.Lock()
 	defer e.pendingDeviceConfigMux.Unlock()
 
-	dc, err := server.NewDeviceConfiguration(e.LocalEntity)
-	if err != nil {
-		return result
-	}
-
-	for msgCounter, msg := range e.pendingDeviceConfigs {
-		data := msg.Cmd.DeviceConfigurationKeyValueListData
-		for _, configKeyValueData := range data.DeviceConfigurationKeyValueData {
-			description, err := dc.GetKeyValueDescriptionFoKeyId(*configKeyValueData.KeyId)
-			if err != nil {
-				continue
-			}
-
-			pendingConfigData := ucapi.PendingDeviceConfiguration{
-				Description:       description,
-				Value:             configKeyValueData.Value,
-				IsValueChangeable: configKeyValueData.IsValueChangeable,
-			}
-
-			if _, exists := result[msgCounter]; !exists {
-				result[msgCounter] = []ucapi.PendingDeviceConfiguration{pendingConfigData}
-			} else {
-				result[msgCounter] = append(result[msgCounter], pendingConfigData)
-			}
-		}
-	}
-	return result
+	return internal.GroupPendingDeviceConfigurations(e.pendingDeviceConfigs, e.LocalEntity)
 }
 
 // accept or deny an incoming device configuration write

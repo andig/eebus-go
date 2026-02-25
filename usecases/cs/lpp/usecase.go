@@ -1,7 +1,6 @@
 package lpp
 
 import (
-	"slices"
 	"sync"
 
 	"github.com/enbility/eebus-go/api"
@@ -169,7 +168,7 @@ func (e *LPP) loadControlWriteCB(msg *spineapi.Message) {
 		if _, ok := e.pendingLimits[*msg.RequestHeader.MsgCounter]; !ok {
 			e.pendingLimits[*msg.RequestHeader.MsgCounter] = msg
 			e.pendingMux.Unlock()
-			e.EventCB(msg.DeviceRemote.Ski(), msg.DeviceRemote, msg.EntityRemote, WriteApprovalRequired)
+			e.EventCB(msg.DeviceRemote.Ski(), msg.DeviceRemote, msg.EntityRemote, LimitWriteApprovalRequired)
 			return
 		}
 	}
@@ -200,29 +199,8 @@ func (e *LPP) approveOrDenyDeviceConfiguration(msg *spineapi.Message, approve bo
 // the implementation only considers write messages for this use case and
 // approves all others
 func (e *LPP) deviceConfigurationWriteCB(msg *spineapi.Message) {
-	if msg.RequestHeader == nil || msg.RequestHeader.MsgCounter == nil ||
-		msg.Cmd.DeviceConfigurationKeyValueListData == nil {
+	if msg.RequestHeader == nil || msg.RequestHeader.MsgCounter == nil {
 		logging.Log().Debug("LPP deviceConfigurationWriteCB: invalid message")
-		return
-	}
-
-	data := msg.Cmd.DeviceConfigurationKeyValueListData
-
-	if data == nil || data.DeviceConfigurationKeyValueData == nil || len(data.DeviceConfigurationKeyValueData) == 0 {
-		logging.Log().Debug("LPP deviceConfigurationWriteCB: no data")
-		return
-	}
-
-	// all DeviceConfigurationKeyValueData must have keyId set as primary identifier
-	if slices.ContainsFunc(data.DeviceConfigurationKeyValueData, func(i model.DeviceConfigurationKeyValueDataType) bool {
-		return i.KeyId == nil
-	}) {
-		logging.Log().Debug("LPP deviceConfigurationWriteCB: invalid message")
-		return
-	}
-
-	dc, err := server.NewDeviceConfiguration(e.LocalEntity)
-	if err != nil {
 		return
 	}
 
@@ -230,27 +208,24 @@ func (e *LPP) deviceConfigurationWriteCB(msg *spineapi.Message) {
 		model.DeviceConfigurationKeyNameTypeFailsafeProductionActivePowerLimit: {},
 		model.DeviceConfigurationKeyNameTypeFailsafeDurationMinimum:            {},
 	}
-	for _, deviceKeyValueData := range data.DeviceConfigurationKeyValueData {
-		description, err := dc.GetKeyValueDescriptionFoKeyId(*deviceKeyValueData.KeyId)
-		if description == nil || err != nil {
-			logging.Log().Debug("LPP deviceConfigurationWriteCB: no device configuration for KeyID found: ", *deviceKeyValueData.KeyId)
-			continue
-		}
-
-		// Only ask for write approval if at least one of the configurations we care about is trying to be set
-		if _, exists := configsToApprove[*description.KeyName]; exists {
-			e.pendingDeviceConfigMux.Lock()
-			if _, exists := e.pendingDeviceConfigs[*msg.RequestHeader.MsgCounter]; !exists {
-				e.pendingDeviceConfigs[*msg.RequestHeader.MsgCounter] = msg
-				e.pendingDeviceConfigMux.Unlock()
-				e.EventCB(msg.DeviceRemote.Ski(), msg.DeviceRemote, msg.EntityRemote, WriteApprovalRequired)
-				return
-			}
-			e.pendingDeviceConfigMux.Unlock()
-		}
+	approvalRequired, err := internal.ConfigurationWriteRequiresApproval(msg, e.LocalEntity, configsToApprove)
+	if err != nil {
+		logging.Log().Errorf("LPP deviceConfigurationWriteCB: %s", err.Error())
+		return
 	}
 
-	// If neither a failsafe duration nor a failsafe limit were set this message does not pertain to this callback so we accept
+	if approvalRequired {
+		e.pendingDeviceConfigMux.Lock()
+		if _, exists := e.pendingDeviceConfigs[*msg.RequestHeader.MsgCounter]; !exists {
+			e.pendingDeviceConfigs[*msg.RequestHeader.MsgCounter] = msg
+			e.pendingDeviceConfigMux.Unlock()
+			e.EventCB(msg.DeviceRemote.Ski(), msg.DeviceRemote, msg.EntityRemote, ConfigurationWriteApprovalRequired)
+			return
+		}
+		e.pendingDeviceConfigMux.Unlock()
+	}
+
+	// If neither a failsafe duration nor a failsafe limit were set this message does not pertain to this use case so we accept
 	go e.approveOrDenyDeviceConfiguration(msg, true, "")
 }
 
