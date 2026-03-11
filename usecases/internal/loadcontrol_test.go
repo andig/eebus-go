@@ -847,7 +847,7 @@ func (s *InternalSuite) Test_WriteLoadControlLimit() {
 	s.mux.Lock()
 	cbInvoked := false
 	s.mux.Unlock()
-	cb := func(result model.ResultDataType) {
+	cb := func(result model.ResultDataType, msgCounter model.MsgCounterType) {
 		s.mux.Lock()
 		cbInvoked = true
 		s.mux.Unlock()
@@ -1126,7 +1126,7 @@ func (s *InternalSuite) Test_WriteLoadControlLimits() {
 				s.mux.Lock()
 				cbInvoked := false
 				s.mux.Unlock()
-				cb := func(result model.ResultDataType) {
+				cb := func(result model.ResultDataType, msgCounter model.MsgCounterType) {
 					s.mux.Lock()
 					cbInvoked = true
 					s.mux.Unlock()
