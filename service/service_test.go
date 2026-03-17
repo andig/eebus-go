@@ -55,7 +55,7 @@ func (s *ServiceSuite) BeforeTest(suiteName, testName string) {
 		"vendor", "brand", "model", "serial",
 		[]shipapi.DeviceCategoryType{shipapi.DeviceCategoryTypeEnergyManagementSystem},
 		model.DeviceTypeTypeEnergyManagementSystem,
-		[]model.EntityTypeType{model.EntityTypeTypeCEM}, 4729, certificate, time.Second*4)
+		[]model.EntityTypeType{model.EntityTypeTypeCEM}, 4729, certificate, time.Second*4, nil, nil)
 	assert.Nil(s.T(), nil, err)
 
 	s.sut = NewService(s.config, s.serviceReader)
@@ -74,30 +74,32 @@ func (s *ServiceSuite) Test_EEBUSHandler() {
 
 	s.sut.spineLocalDevice = s.localDevice
 
-	entry := shipapi.RemoteService{
+	testIdentity := shipapi.NewServiceIdentity(testSki, "", "")
+
+	entry := shipapi.RemoteMdnsService{
 		Ski: testSki,
 	}
 
-	entries := []shipapi.RemoteService{entry}
-	s.serviceReader.EXPECT().VisibleRemoteServicesUpdated(mock.Anything, mock.Anything).Return()
-	s.sut.VisibleRemoteServicesUpdated(entries)
+	entries := []shipapi.RemoteMdnsService{entry}
+	s.serviceReader.EXPECT().VisibleRemoteMdnsServicesUpdated(mock.Anything, mock.Anything).Return()
+	s.sut.VisibleRemoteMdnsServicesUpdated(entries)
 
-	s.serviceReader.EXPECT().RemoteSKIConnected(mock.Anything, mock.Anything).Return()
-	s.sut.RemoteSKIConnected(testSki)
+	s.serviceReader.EXPECT().RemoteServiceConnected(mock.Anything, mock.Anything).Return()
+	s.sut.RemoteServiceConnected(testIdentity)
 
-	s.serviceReader.EXPECT().RemoteSKIDisconnected(mock.Anything, mock.Anything).Return()
+	s.serviceReader.EXPECT().RemoteServiceDisconnected(mock.Anything, mock.Anything).Return()
 	s.localDevice.EXPECT().RemoveRemoteDeviceConnection(testSki).Return()
-	s.sut.RemoteSKIDisconnected(testSki)
+	s.sut.RemoteServiceDisconnected(testIdentity)
 
-	s.serviceReader.EXPECT().ServiceShipIDUpdate(mock.Anything, mock.Anything).Return()
-	s.sut.ServiceShipIDUpdate(testSki, "shipid")
+	s.serviceReader.EXPECT().ServiceUpdated(mock.Anything).Return()
+	s.sut.ServiceUpdated(testIdentity)
 
 	s.serviceReader.EXPECT().ServicePairingDetailUpdate(mock.Anything, mock.Anything).Return()
 	detail := &shipapi.ConnectionStateDetail{}
-	s.sut.ServicePairingDetailUpdate(testSki, detail)
+	s.sut.ServicePairingDetailUpdate(testIdentity, detail)
 
 	s.sut.UserIsAbleToApproveOrCancelPairingRequests(true)
-	result := s.sut.AllowWaitingForTrust(testSki)
+	result := s.sut.AllowWaitingForTrust(testIdentity)
 	assert.Equal(s.T(), true, result)
 
 	conf := s.sut.Configuration()
@@ -109,40 +111,42 @@ func (s *ServiceSuite) Test_EEBUSHandler() {
 
 func (s *ServiceSuite) Test_ConnectionsHub() {
 	testSki := "test"
+	testIdentity := shipapi.NewServiceIdentity(testSki, "", "")
 
 	s.sut.connectionsHub = s.conHub
 	s.sut.mdns = s.mdns
 	s.sut.spineLocalDevice = s.localDevice
-	s.sut.localService = shipapi.NewServiceDetails(testSki)
+	s.sut.localService = shipapi.NewServiceDetails(testSki, "", "")
 
-	s.conHub.EXPECT().PairingDetailForSki(mock.Anything).Return(nil)
-	s.sut.PairingDetailForSki(testSki)
+	s.conHub.EXPECT().PairingDetailFor(mock.Anything).Return(nil)
+	s.sut.PairingDetailFor(testIdentity)
 
-	s.conHub.EXPECT().ServiceForSKI(mock.Anything).Return(nil)
-	details := s.sut.RemoteServiceForSKI(testSki)
+	s.conHub.EXPECT().ServiceFor(mock.Anything).Return(nil)
+	details := s.sut.RemoteServiceFor(testIdentity)
 	assert.Nil(s.T(), details)
 
 	s.localDevice.EXPECT().SetupRemoteDevice(mock.Anything, s).Return(nil)
-	s.sut.SetupRemoteDevice(testSki, s)
+	s.sut.SetupRemoteService(testIdentity, s)
 
 	s.conHub.EXPECT().SetAutoAccept(mock.Anything).Return()
 	s.sut.SetAutoAccept(true)
 	assert.True(s.T(), s.sut.IsAutoAcceptEnabled())
 
-	s.mdns.EXPECT().QRCodeText().Return("text")
-	assert.Equal(s.T(), "text", s.sut.QRCodeText())
+	s.conHub.EXPECT().GeneratePairingQR().Return("text", nil)
+	qrCode, err := s.sut.QRCodeText()
+	assert.Nil(s.T(), err)
+	assert.Equal(s.T(), "text", qrCode)
+	s.conHub.EXPECT().RegisterRemoteService(mock.Anything).Return()
+	s.sut.RegisterRemoteService(testIdentity)
 
-	s.conHub.EXPECT().RegisterRemoteSKI(mock.Anything, "").Return()
-	s.sut.RegisterRemoteSKI(testSki, "")
+	s.conHub.EXPECT().UnregisterRemoteService(mock.Anything).Return()
+	s.sut.UnregisterRemoteService(testIdentity)
 
-	s.conHub.EXPECT().UnregisterRemoteSKI(mock.Anything).Return()
-	s.sut.UnregisterRemoteSKI(testSki)
+	s.conHub.EXPECT().CancelPairing(mock.Anything).Return()
+	s.sut.CancelPairing(testIdentity)
 
-	s.conHub.EXPECT().CancelPairingWithSKI(mock.Anything).Return()
-	s.sut.CancelPairingWithSKI(testSki)
-
-	s.conHub.EXPECT().DisconnectSKI(mock.Anything, mock.Anything).Return()
-	s.sut.DisconnectSKI(testSki, "reason")
+	s.conHub.EXPECT().DisconnectService(mock.Anything, mock.Anything).Return()
+	s.sut.DisconnectService(testIdentity, "reason")
 }
 
 func (s *ServiceSuite) Test_SetLogging() {
@@ -171,8 +175,8 @@ func (s *ServiceSuite) Test_Setup() {
 	assert.Equal(s.T(), "d:_n:vendor_model-serial", string(*address))
 
 	s.sut.connectionsHub = s.conHub
-	s.conHub.EXPECT().Start().Once()
-	s.sut.Start()
+	s.conHub.EXPECT().Start().Return(nil).Once()
+	_ = s.sut.Start()
 
 	time.Sleep(time.Millisecond * 200)
 
@@ -180,7 +184,7 @@ func (s *ServiceSuite) Test_Setup() {
 	assert.True(s.T(), isRunning)
 
 	// nothing should happen
-	s.sut.Start()
+	_ = s.sut.Start()
 
 	s.conHub.EXPECT().Shutdown().Once()
 	s.sut.Shutdown()
@@ -199,7 +203,7 @@ func (s *ServiceSuite) Test_Setup_IANA() {
 		"12345", "brand", "model", "serial",
 		[]shipapi.DeviceCategoryType{shipapi.DeviceCategoryTypeEnergyManagementSystem},
 		model.DeviceTypeTypeEnergyManagementSystem,
-		[]model.EntityTypeType{model.EntityTypeTypeCEM}, 4729, certificate, time.Second*4)
+		[]model.EntityTypeType{model.EntityTypeTypeCEM}, 4729, certificate, time.Second*4, nil, nil)
 	assert.Nil(s.T(), nil, err)
 
 	s.sut = NewService(s.config, s.serviceReader)
@@ -218,8 +222,8 @@ func (s *ServiceSuite) Test_Setup_IANA() {
 	assert.Equal(s.T(), "d:_i:12345_model-serial", string(*address))
 
 	s.sut.connectionsHub = s.conHub
-	s.conHub.EXPECT().Start()
-	s.sut.Start()
+	s.conHub.EXPECT().Start().Return(nil)
+	_ = s.sut.Start()
 
 	time.Sleep(time.Millisecond * 200)
 
@@ -240,7 +244,7 @@ func (s *ServiceSuite) Test_Setup_Error_DeviceName() {
 		"serialserialserialserialserialserialserialserialserialserialserialserialserialserialserialserialserial",
 		[]shipapi.DeviceCategoryType{shipapi.DeviceCategoryTypeEnergyManagementSystem},
 		model.DeviceTypeTypeEnergyManagementSystem,
-		[]model.EntityTypeType{model.EntityTypeTypeCEM}, 4729, certificate, time.Second*4)
+		[]model.EntityTypeType{model.EntityTypeTypeCEM}, 4729, certificate, time.Second*4, nil, nil)
 	assert.Nil(s.T(), nil, err)
 
 	s.sut = NewService(s.config, s.serviceReader)

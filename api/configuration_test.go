@@ -35,7 +35,7 @@ func (s *ConfigurationSuite) Test_Configuration() {
 	config, err := NewConfiguration("", brand, model, serial,
 		categories,
 		spinemodel.DeviceTypeTypeEnergyManagementSystem,
-		entityTypes, 0, certificate, heartbeatTimeout)
+		entityTypes, 0, certificate, heartbeatTimeout, nil, nil)
 
 	assert.Nil(s.T(), config)
 	assert.NotNil(s.T(), err)
@@ -43,7 +43,7 @@ func (s *ConfigurationSuite) Test_Configuration() {
 	config, err = NewConfiguration("", brand, model, serial,
 		categories,
 		spinemodel.DeviceTypeTypeEnergyManagementSystem,
-		entityTypes, port, certificate, heartbeatTimeout)
+		entityTypes, port, certificate, heartbeatTimeout, nil, nil)
 
 	assert.Nil(s.T(), config)
 	assert.NotNil(s.T(), err)
@@ -51,7 +51,7 @@ func (s *ConfigurationSuite) Test_Configuration() {
 	config, err = NewConfiguration(vendor, "", model, serial,
 		categories,
 		spinemodel.DeviceTypeTypeEnergyManagementSystem,
-		entityTypes, port, certificate, heartbeatTimeout)
+		entityTypes, port, certificate, heartbeatTimeout, nil, nil)
 
 	assert.Nil(s.T(), config)
 	assert.NotNil(s.T(), err)
@@ -59,7 +59,7 @@ func (s *ConfigurationSuite) Test_Configuration() {
 	config, err = NewConfiguration(vendor, brand, "", serial,
 		categories,
 		spinemodel.DeviceTypeTypeEnergyManagementSystem,
-		entityTypes, port, certificate, heartbeatTimeout)
+		entityTypes, port, certificate, heartbeatTimeout, nil, nil)
 
 	assert.Nil(s.T(), config)
 	assert.NotNil(s.T(), err)
@@ -67,7 +67,7 @@ func (s *ConfigurationSuite) Test_Configuration() {
 	config, err = NewConfiguration(vendor, brand, model, "",
 		categories,
 		spinemodel.DeviceTypeTypeEnergyManagementSystem,
-		entityTypes, port, certificate, heartbeatTimeout)
+		entityTypes, port, certificate, heartbeatTimeout, nil, nil)
 
 	assert.Nil(s.T(), config)
 	assert.NotNil(s.T(), err)
@@ -75,7 +75,7 @@ func (s *ConfigurationSuite) Test_Configuration() {
 	config, err = NewConfiguration(vendor, brand, model, serial,
 		nil,
 		spinemodel.DeviceTypeTypeEnergyManagementSystem,
-		entityTypes, port, certificate, heartbeatTimeout)
+		entityTypes, port, certificate, heartbeatTimeout, nil, nil)
 
 	assert.Nil(s.T(), config)
 	assert.NotNil(s.T(), err)
@@ -83,7 +83,7 @@ func (s *ConfigurationSuite) Test_Configuration() {
 	config, err = NewConfiguration(vendor, brand, model, serial,
 		categories,
 		"",
-		entityTypes, port, certificate, heartbeatTimeout)
+		entityTypes, port, certificate, heartbeatTimeout, nil, nil)
 
 	assert.Nil(s.T(), config)
 	assert.NotNil(s.T(), err)
@@ -91,7 +91,7 @@ func (s *ConfigurationSuite) Test_Configuration() {
 	config, err = NewConfiguration(vendor, brand, model, serial,
 		categories,
 		spinemodel.DeviceTypeTypeEnergyManagementSystem,
-		[]spinemodel.EntityTypeType{}, port, certificate, heartbeatTimeout)
+		[]spinemodel.EntityTypeType{}, port, certificate, heartbeatTimeout, nil, nil)
 
 	assert.Nil(s.T(), config)
 	assert.NotNil(s.T(), err)
@@ -99,7 +99,7 @@ func (s *ConfigurationSuite) Test_Configuration() {
 	config, err = NewConfiguration(vendor, brand, model, serial,
 		categories,
 		spinemodel.DeviceTypeTypeEnergyManagementSystem,
-		entityTypes, port, certificate, heartbeatTimeout)
+		entityTypes, port, certificate, heartbeatTimeout, nil, nil)
 
 	assert.NotNil(s.T(), config)
 	assert.Nil(s.T(), err)
