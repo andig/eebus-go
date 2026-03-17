@@ -2,6 +2,7 @@ package service
 
 import (
 	"crypto/tls"
+	"errors"
 	"testing"
 	"time"
 
@@ -102,6 +103,24 @@ func (s *ServiceSuite) Test_EEBUSHandler() {
 	result := s.sut.AllowWaitingForTrust(testIdentity)
 	assert.Equal(s.T(), true, result)
 
+	// Test AllowWaitingForTrust returns false when pairing not possible
+	s.sut.UserIsAbleToApproveOrCancelPairingRequests(false)
+	result = s.sut.AllowWaitingForTrust(testIdentity)
+	assert.Equal(s.T(), false, result)
+
+	// Test ServiceAutoTrusted
+	s.serviceReader.EXPECT().ServiceAutoTrusted(mock.Anything, mock.Anything).Return()
+	s.sut.ServiceAutoTrusted(testIdentity)
+
+	// Test ServiceAutoTrustFailed
+	testErr := errors.New("pairing failed")
+	s.serviceReader.EXPECT().ServiceAutoTrustFailed(mock.Anything, mock.Anything, mock.Anything).Return()
+	s.sut.ServiceAutoTrustFailed(testIdentity, testErr)
+
+	// Test ServiceAutoTrustRemoved
+	s.serviceReader.EXPECT().ServiceAutoTrustRemoved(mock.Anything, mock.Anything, mock.Anything).Return()
+	s.sut.ServiceAutoTrustRemoved(testIdentity, "device replaced")
+
 	conf := s.sut.Configuration()
 	assert.Equal(s.T(), s.sut.configuration, conf)
 
@@ -147,6 +166,42 @@ func (s *ServiceSuite) Test_ConnectionsHub() {
 
 	s.conHub.EXPECT().DisconnectService(mock.Anything, mock.Anything).Return()
 	s.sut.DisconnectService(testIdentity, "reason")
+
+	// Test GetLocalCertificateFingerprint
+	s.conHub.EXPECT().GetLocalCertificateFingerprint().Return("fingerprint123", nil)
+	fp, err := s.sut.GetLocalCertificateFingerprint()
+	assert.Nil(s.T(), err)
+	assert.Equal(s.T(), "fingerprint123", fp)
+
+	// Test StartAnnouncementTo
+	target := shipapi.PairingTarget{
+		SKI:    "targetSki",
+		ShipID: "targetShipId",
+	}
+	s.conHub.EXPECT().StartAnnouncementTo(mock.Anything).Return(nil)
+	err = s.sut.StartAnnouncementTo(target)
+	assert.Nil(s.T(), err)
+
+	// Test StopAnnouncementTo
+	s.conHub.EXPECT().StopAnnouncementTo("targetShipId").Return(nil)
+	err = s.sut.StopAnnouncementTo("targetShipId")
+	assert.Nil(s.T(), err)
+
+	// Test IsAnnouncingTo
+	s.conHub.EXPECT().IsAnnouncingTo("targetShipId").Return(true)
+	isAnnouncing := s.sut.IsAnnouncingTo("targetShipId")
+	assert.True(s.T(), isAnnouncing)
+
+	// Test GetActiveAnnouncements
+	s.conHub.EXPECT().GetActiveAnnouncements().Return([]string{"ship1", "ship2"})
+	announcements := s.sut.GetActiveAnnouncements()
+	assert.Equal(s.T(), []string{"ship1", "ship2"}, announcements)
+
+	// Test HasTrustedAddCuDevice
+	s.conHub.EXPECT().HasTrustedAddCuDevice().Return("fpValue", "shipIdValue")
+	fpResult, shipIdResult := s.sut.HasTrustedAddCuDevice()
+	assert.Equal(s.T(), "fpValue", fpResult)
+	assert.Equal(s.T(), "shipIdValue", shipIdResult)
 }
 
 func (s *ServiceSuite) Test_SetLogging() {
@@ -258,4 +313,95 @@ func (s *ServiceSuite) Test_Setup_Error_DeviceName() {
 
 	err = s.sut.Setup()
 	assert.NotNil(s.T(), err)
+}
+
+func (s *ServiceSuite) Test_QRCodeText_NoSetup() {
+	// QRCodeText should return error when connectionsHub is nil (not set up)
+	qr, err := s.sut.QRCodeText()
+	assert.NotNil(s.T(), err)
+	assert.Empty(s.T(), qr)
+}
+
+func (s *ServiceSuite) Test_QRCodeText_Error() {
+	// QRCodeText should propagate errors from connectionsHub
+	s.sut.connectionsHub = s.conHub
+	expectedError := errors.New("qr generation failed")
+	s.conHub.EXPECT().GeneratePairingQR().Return("", expectedError)
+	qr, err := s.sut.QRCodeText()
+	assert.NotNil(s.T(), err)
+	assert.Empty(s.T(), qr)
+	assert.Equal(s.T(), err.Error(), expectedError.Error())
+}
+
+func (s *ServiceSuite) Test_Start_Error() {
+	// Start should propagate errors from connectionsHub.Start()
+	s.sut.connectionsHub = s.conHub
+	expectedError := errors.New("start failed")
+	s.conHub.EXPECT().Start().Return(expectedError).Once()
+	err := s.sut.Start()
+	assert.NotNil(s.T(), err)
+	assert.Equal(s.T(), err.Error(), expectedError.Error())
+	assert.False(s.T(), s.sut.IsRunning())
+}
+
+func (s *ServiceSuite) Test_RemoteServiceDisconnected_NilLocalDevice() {
+	// RemoteServiceDisconnected should not panic when spineLocalDevice is nil
+	testIdentity := shipapi.NewServiceIdentity("test", "", "")
+	s.sut.spineLocalDevice = nil
+	s.serviceReader.EXPECT().RemoteServiceDisconnected(mock.Anything, mock.Anything).Return()
+	s.sut.RemoteServiceDisconnected(testIdentity)
+}
+
+func (s *ServiceSuite) Test_IsAnnouncingTo_False() {
+	s.sut.connectionsHub = s.conHub
+	s.conHub.EXPECT().IsAnnouncingTo("nonexistent").Return(false)
+	result := s.sut.IsAnnouncingTo("nonexistent")
+	assert.False(s.T(), result)
+}
+
+func (s *ServiceSuite) Test_GetActiveAnnouncements_Empty() {
+	s.sut.connectionsHub = s.conHub
+	s.conHub.EXPECT().GetActiveAnnouncements().Return([]string{})
+	announcements := s.sut.GetActiveAnnouncements()
+	assert.Empty(s.T(), announcements)
+}
+
+func (s *ServiceSuite) Test_HasTrustedAddCuDevice_Empty() {
+	s.sut.connectionsHub = s.conHub
+	s.conHub.EXPECT().HasTrustedAddCuDevice().Return("", "")
+	fp, shipID := s.sut.HasTrustedAddCuDevice()
+	assert.Empty(s.T(), fp)
+	assert.Empty(s.T(), shipID)
+}
+
+func (s *ServiceSuite) Test_StartAnnouncementTo_Error() {
+	s.sut.connectionsHub = s.conHub
+	target := shipapi.PairingTarget{
+		SKI:    "ski",
+		ShipID: "shipId",
+	}
+	expectedError := errors.New("announcement failed")
+	s.conHub.EXPECT().StartAnnouncementTo(mock.Anything).Return(expectedError)
+	err := s.sut.StartAnnouncementTo(target)
+	assert.NotNil(s.T(), err)
+	assert.Equal(s.T(), err.Error(), expectedError.Error())
+}
+
+func (s *ServiceSuite) Test_StopAnnouncementTo_Error() {
+	s.sut.connectionsHub = s.conHub
+	expectedError := errors.New("stop failed")
+	s.conHub.EXPECT().StopAnnouncementTo("ship1").Return(expectedError)
+	err := s.sut.StopAnnouncementTo("ship1")
+	assert.NotNil(s.T(), err)
+	assert.Equal(s.T(), err.Error(), expectedError.Error())
+}
+
+func (s *ServiceSuite) Test_GetLocalCertificateFingerprint_Error() {
+	s.sut.connectionsHub = s.conHub
+	expectedError := errors.New("fingerprint error")
+	s.conHub.EXPECT().GetLocalCertificateFingerprint().Return("", expectedError)
+	fp, err := s.sut.GetLocalCertificateFingerprint()
+	assert.NotNil(s.T(), err)
+	assert.Equal(s.T(), err.Error(), expectedError.Error())
+	assert.Empty(s.T(), fp)
 }
