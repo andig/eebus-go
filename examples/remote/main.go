@@ -86,7 +86,7 @@ func main() {
 			model.EntityTypeTypeGridGuard,
 			model.EntityTypeTypeCEM,
 		},
-		23292, certificate, time.Second*4)
+		23292, certificate, time.Second*4, nil, nil)
 	if *iface != "" {
 		configuration.SetInterfaces([]string{*iface})
 		log.Printf("waiting until %v is up", iface)
