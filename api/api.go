@@ -139,8 +139,8 @@ type ServiceInterface interface {
 	// SHIP Pairing: Get the SHIP ID and Fingerprint of controlbox paired via SHIP Pairing
 	// Used by devA only.
 	//
-	// Returns: the fingerprint and ShipID of any trusted AddCu device, respectively. Or empty string if none
-	HasTrustedAddCuDevice() (string, string)
+	// Returns: the ServiceDetails of any trusted AddCu device. Or nil if none
+	GetTrustedAddCuDevice() *shipapi.ServiceDetails
 }
 
 // interface for receiving data for specific events from Service

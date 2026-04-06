@@ -197,11 +197,11 @@ func (s *ServiceSuite) Test_ConnectionsHub() {
 	announcements := s.sut.GetActiveAnnouncements()
 	assert.Equal(s.T(), []string{"ship1", "ship2"}, announcements)
 
-	// Test HasTrustedAddCuDevice
-	s.conHub.EXPECT().HasTrustedAddCuDevice().Return("fpValue", "shipIdValue")
-	fpResult, shipIdResult := s.sut.HasTrustedAddCuDevice()
-	assert.Equal(s.T(), "fpValue", fpResult)
-	assert.Equal(s.T(), "shipIdValue", shipIdResult)
+	// Test GetTrustedAddCuDevice
+	s.conHub.EXPECT().GetTrustedAddCuDevice().Return(shipapi.NewServiceDetails("", "fpValue", "shipIdValue"))
+	svc := s.sut.GetTrustedAddCuDevice()
+	assert.Equal(s.T(), "fpValue", svc.Fingerprint())
+	assert.Equal(s.T(), "shipIdValue", svc.ShipID())
 }
 
 func (s *ServiceSuite) Test_SetLogging() {
@@ -366,12 +366,11 @@ func (s *ServiceSuite) Test_GetActiveAnnouncements_Empty() {
 	assert.Empty(s.T(), announcements)
 }
 
-func (s *ServiceSuite) Test_HasTrustedAddCuDevice_Empty() {
+func (s *ServiceSuite) Test_GetTrustedAddCuDevice_Empty() {
 	s.sut.connectionsHub = s.conHub
-	s.conHub.EXPECT().HasTrustedAddCuDevice().Return("", "")
-	fp, shipID := s.sut.HasTrustedAddCuDevice()
-	assert.Empty(s.T(), fp)
-	assert.Empty(s.T(), shipID)
+	s.conHub.EXPECT().GetTrustedAddCuDevice().Return(nil)
+	svc := s.sut.GetTrustedAddCuDevice()
+	assert.Nil(s.T(), svc)
 }
 
 func (s *ServiceSuite) Test_StartAnnouncementTo_Error() {

@@ -325,6 +325,6 @@ func (s *Service) GetActiveAnnouncements() []string {
 
 // SHIP Pairing: Get the SHIP ID and Fingerprint of controlbox paired via SHIP Pairing
 // Used by devA only.
-func (s *Service) HasTrustedAddCuDevice() (string, string) {
-	return s.connectionsHub.HasTrustedAddCuDevice()
+func (s *Service) GetTrustedAddCuDevice() *shipapi.ServiceDetails {
+	return s.connectionsHub.GetTrustedAddCuDevice()
 }
