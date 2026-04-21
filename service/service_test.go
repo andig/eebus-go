@@ -135,7 +135,7 @@ func (s *ServiceSuite) Test_ConnectionsHub() {
 	s.sut.connectionsHub = s.conHub
 	s.sut.mdns = s.mdns
 	s.sut.spineLocalDevice = s.localDevice
-	s.sut.localService = shipapi.NewServiceDetails(testSki, "", "")
+	s.sut.localService, _ = shipapi.NewServiceDetails(testSki, "", "")
 
 	s.conHub.EXPECT().PairingDetailFor(mock.Anything).Return(nil)
 	s.sut.PairingDetailFor(testIdentity)
@@ -198,7 +198,8 @@ func (s *ServiceSuite) Test_ConnectionsHub() {
 	assert.Equal(s.T(), []string{"ship1", "ship2"}, announcements)
 
 	// Test GetTrustedAddCuDevice
-	s.conHub.EXPECT().GetTrustedAddCuDevice().Return(shipapi.NewServiceDetails("", "fpValue", "shipIdValue"))
+	service, _ := shipapi.NewServiceDetails("", "fpValue", "shipIdValue")
+	s.conHub.EXPECT().GetTrustedAddCuDevice().Return(service)
 	svc := s.sut.GetTrustedAddCuDevice()
 	assert.Equal(s.T(), "fpValue", svc.Fingerprint())
 	assert.Equal(s.T(), "shipIdValue", svc.ShipID())

@@ -88,9 +88,10 @@ func (s *Service) Setup() error {
 	//   e.g. in its service discovery. This ID is present in the mDNS/DNS-SD local service discovery;
 	// In SHIP 13.4.6.2 the accessMethods.id is defined as
 	//   The originator's unique ID
-	// I assume those two to mean the same.
-	// TODO: clarify
-	s.localService = shipapi.NewServiceDetails(ski, fingerprint, sd.Identifier())
+	s.localService, err = shipapi.NewServiceDetails(ski, fingerprint, sd.Identifier())
+	if err != nil {
+		return err
+	}
 
 	logging.Log().Info("Local SKI:", ski)
 
