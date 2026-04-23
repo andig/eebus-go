@@ -846,10 +846,12 @@ func (s *InternalSuite) Test_WriteLoadControlLimit() {
 
 	s.mux.Lock()
 	cbInvoked := false
+	cbMsgCounter := model.MsgCounterType(1_000_000)
 	s.mux.Unlock()
 	cb := func(result model.ResultDataType, msgCounter model.MsgCounterType) {
 		s.mux.Lock()
 		cbInvoked = true
+		cbMsgCounter = msgCounter
 		s.mux.Unlock()
 	}
 	msgCounter, err = WriteLoadControlLimit(s.localEntity, s.monitoredEntity, filter, loadLimit, cb)
@@ -876,6 +878,7 @@ func (s *InternalSuite) Test_WriteLoadControlLimit() {
 	time.Sleep(time.Millisecond * 200)
 	s.mux.Lock()
 	assert.True(s.T(), cbInvoked)
+	assert.Equal(s.T(), *msgCounter, cbMsgCounter)
 	s.mux.Unlock()
 
 	loadLimit = ucapi.LoadLimit{
@@ -1125,10 +1128,12 @@ func (s *InternalSuite) Test_WriteLoadControlLimits() {
 
 				s.mux.Lock()
 				cbInvoked := false
+				cbMsgCounter := model.MsgCounterType(1_000_000)
 				s.mux.Unlock()
 				cb := func(result model.ResultDataType, msgCounter model.MsgCounterType) {
 					s.mux.Lock()
 					cbInvoked = true
+					cbMsgCounter = msgCounter
 					s.mux.Unlock()
 				}
 				msgCounter, err = WriteLoadControlPhaseLimits(s.localEntity, s.monitoredEntity, filter, phaseLimitValues, cb)
@@ -1159,6 +1164,7 @@ func (s *InternalSuite) Test_WriteLoadControlLimits() {
 				time.Sleep(time.Millisecond * 200)
 				s.mux.Lock()
 				assert.True(s.T(), cbInvoked)
+				assert.Equal(s.T(), *msgCounter, cbMsgCounter)
 				s.mux.Unlock()
 			}
 		})

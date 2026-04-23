@@ -881,7 +881,7 @@ func (_c *EgLPPInterface_WriteFailsafeProductionActivePowerLimit_Call) RunAndRet
 }
 
 // WriteProductionLimit provides a mock function for the type EgLPPInterface
-func (_mock *EgLPPInterface) WriteProductionLimit(entity api.EntityRemoteInterface, limit api0.LoadLimit, resultCB func(result model.ResultDataType)) (*model.MsgCounterType, error) {
+func (_mock *EgLPPInterface) WriteProductionLimit(entity api.EntityRemoteInterface, limit api0.LoadLimit, resultCB func(result model.ResultDataType, msgCounter model.MsgCounterType)) (*model.MsgCounterType, error) {
 	ret := _mock.Called(entity, limit, resultCB)
 
 	if len(ret) == 0 {
@@ -890,17 +890,17 @@ func (_mock *EgLPPInterface) WriteProductionLimit(entity api.EntityRemoteInterfa
 
 	var r0 *model.MsgCounterType
 	var r1 error
-	if returnFunc, ok := ret.Get(0).(func(api.EntityRemoteInterface, api0.LoadLimit, func(result model.ResultDataType)) (*model.MsgCounterType, error)); ok {
+	if returnFunc, ok := ret.Get(0).(func(api.EntityRemoteInterface, api0.LoadLimit, func(result model.ResultDataType, msgCounter model.MsgCounterType)) (*model.MsgCounterType, error)); ok {
 		return returnFunc(entity, limit, resultCB)
 	}
-	if returnFunc, ok := ret.Get(0).(func(api.EntityRemoteInterface, api0.LoadLimit, func(result model.ResultDataType)) *model.MsgCounterType); ok {
+	if returnFunc, ok := ret.Get(0).(func(api.EntityRemoteInterface, api0.LoadLimit, func(result model.ResultDataType, msgCounter model.MsgCounterType)) *model.MsgCounterType); ok {
 		r0 = returnFunc(entity, limit, resultCB)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*model.MsgCounterType)
 		}
 	}
-	if returnFunc, ok := ret.Get(1).(func(api.EntityRemoteInterface, api0.LoadLimit, func(result model.ResultDataType)) error); ok {
+	if returnFunc, ok := ret.Get(1).(func(api.EntityRemoteInterface, api0.LoadLimit, func(result model.ResultDataType, msgCounter model.MsgCounterType)) error); ok {
 		r1 = returnFunc(entity, limit, resultCB)
 	} else {
 		r1 = ret.Error(1)
@@ -916,12 +916,12 @@ type EgLPPInterface_WriteProductionLimit_Call struct {
 // WriteProductionLimit is a helper method to define mock.On call
 //   - entity api.EntityRemoteInterface
 //   - limit api0.LoadLimit
-//   - resultCB func(result model.ResultDataType)
+//   - resultCB func(result model.ResultDataType, msgCounter model.MsgCounterType)
 func (_e *EgLPPInterface_Expecter) WriteProductionLimit(entity interface{}, limit interface{}, resultCB interface{}) *EgLPPInterface_WriteProductionLimit_Call {
 	return &EgLPPInterface_WriteProductionLimit_Call{Call: _e.mock.On("WriteProductionLimit", entity, limit, resultCB)}
 }
 
-func (_c *EgLPPInterface_WriteProductionLimit_Call) Run(run func(entity api.EntityRemoteInterface, limit api0.LoadLimit, resultCB func(result model.ResultDataType))) *EgLPPInterface_WriteProductionLimit_Call {
+func (_c *EgLPPInterface_WriteProductionLimit_Call) Run(run func(entity api.EntityRemoteInterface, limit api0.LoadLimit, resultCB func(result model.ResultDataType, msgCounter model.MsgCounterType))) *EgLPPInterface_WriteProductionLimit_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		var arg0 api.EntityRemoteInterface
 		if args[0] != nil {
@@ -931,9 +931,9 @@ func (_c *EgLPPInterface_WriteProductionLimit_Call) Run(run func(entity api.Enti
 		if args[1] != nil {
 			arg1 = args[1].(api0.LoadLimit)
 		}
-		var arg2 func(result model.ResultDataType)
+		var arg2 func(result model.ResultDataType, msgCounter model.MsgCounterType)
 		if args[2] != nil {
-			arg2 = args[2].(func(result model.ResultDataType))
+			arg2 = args[2].(func(result model.ResultDataType, msgCounter model.MsgCounterType))
 		}
 		run(
 			arg0,
@@ -949,7 +949,7 @@ func (_c *EgLPPInterface_WriteProductionLimit_Call) Return(msgCounterType *model
 	return _c
 }
 
-func (_c *EgLPPInterface_WriteProductionLimit_Call) RunAndReturn(run func(entity api.EntityRemoteInterface, limit api0.LoadLimit, resultCB func(result model.ResultDataType)) (*model.MsgCounterType, error)) *EgLPPInterface_WriteProductionLimit_Call {
+func (_c *EgLPPInterface_WriteProductionLimit_Call) RunAndReturn(run func(entity api.EntityRemoteInterface, limit api0.LoadLimit, resultCB func(result model.ResultDataType, msgCounter model.MsgCounterType)) (*model.MsgCounterType, error)) *EgLPPInterface_WriteProductionLimit_Call {
 	_c.Call.Return(run)
 	return _c
 }
