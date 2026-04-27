@@ -273,7 +273,7 @@ func (e *LPP) SetFailsafeDurationMinimum(duration time.Duration, changeable bool
 	return dc.UpdateKeyValueDataForFilter(data, nil, filter)
 }
 
-// return the currently pending incoming failsafe production limit writes
+// return the currently pending incoming device configuration writes
 func (e *LPP) PendingDeviceConfigurations() map[model.MsgCounterType][]ucapi.PendingDeviceConfiguration {
 	e.pendingDeviceConfigMux.Lock()
 	defer e.pendingDeviceConfigMux.Unlock()
