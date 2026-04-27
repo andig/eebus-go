@@ -67,24 +67,24 @@ func GroupPendingDeviceConfigurations(pendingDeviceConfigs map[model.MsgCounterT
 	}
 
 	for msgCounter, msg := range pendingDeviceConfigs {
-		data := msg.Cmd.DeviceConfigurationKeyValueListData
-		for _, configKeyValueData := range data.DeviceConfigurationKeyValueData {
+		if msg.Cmd.DeviceConfigurationKeyValueListData == nil {
+			continue
+		}
+		for _, configKeyValueData := range msg.Cmd.DeviceConfigurationKeyValueListData.DeviceConfigurationKeyValueData {
+			if configKeyValueData.KeyId == nil {
+				continue
+			}
 			description, err := dc.GetKeyValueDescriptionFoKeyId(*configKeyValueData.KeyId)
-			if err != nil {
+			if err != nil || description == nil || description.KeyName == nil {
 				continue
 			}
 
-			pendingConfigData := ucapi.PendingDeviceConfiguration{
-				Description:       description,
+			result[msgCounter] = append(result[msgCounter], ucapi.PendingDeviceConfiguration{
+				Description:       *description,
+				KeyName:           *description.KeyName,
 				Value:             configKeyValueData.Value,
 				IsValueChangeable: configKeyValueData.IsValueChangeable,
-			}
-
-			if _, exists := result[msgCounter]; !exists {
-				result[msgCounter] = []ucapi.PendingDeviceConfiguration{pendingConfigData}
-			} else {
-				result[msgCounter] = append(result[msgCounter], pendingConfigData)
-			}
+			})
 		}
 	}
 	return result

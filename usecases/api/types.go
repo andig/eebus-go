@@ -168,7 +168,8 @@ type DurationSlotValue struct {
 }
 
 type PendingDeviceConfiguration struct {
-	Description       *model.DeviceConfigurationKeyValueDescriptionDataType `json:"description,omitempty"`
-	Value             *model.DeviceConfigurationKeyValueValueType           `json:"value,omitempty"`
-	IsValueChangeable *bool                                                 `json:"isValueChangeable,omitempty"`
+	Description       model.DeviceConfigurationKeyValueDescriptionDataType `json:"description"`
+	KeyName           model.DeviceConfigurationKeyNameType                 `json:"keyName"`
+	Value             *model.DeviceConfigurationKeyValueValueType          `json:"value,omitempty"`
+	IsValueChangeable *bool                                                `json:"isValueChangeable,omitempty"`
 }

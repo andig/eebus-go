@@ -213,11 +213,13 @@ func (e *LPC) deviceConfigurationWriteCB(msg *spineapi.Message) {
 		e.pendingDeviceConfigMux.Lock()
 		if _, exists := e.pendingDeviceConfigs[*msg.RequestHeader.MsgCounter]; !exists {
 			e.pendingDeviceConfigs[*msg.RequestHeader.MsgCounter] = msg
+			// Unlock before calling EventCB to avoid deadlock (EventCB will need to read pendingDeviceConfigs)
 			e.pendingDeviceConfigMux.Unlock()
 			e.EventCB(msg.DeviceRemote.Ski(), msg.DeviceRemote, msg.EntityRemote, ConfigurationWriteApprovalRequired)
 			return
 		}
 		e.pendingDeviceConfigMux.Unlock()
+		return
 	}
 
 	// If neither a failsafe duration nor a failsafe limit were set this message does not pertain to this use case so we accept

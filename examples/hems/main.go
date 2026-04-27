@@ -164,9 +164,7 @@ func (h *hems) OnLPCEvent(ski string, device spineapi.DeviceRemoteInterface, ent
 		for msgCounter, configs := range pendingDeviceConfigWrites {
 			fmt.Printf("Approving LPC device config write with msgCounter %d for features: ", msgCounter)
 			for _, config := range configs {
-				if config.Description.KeyName != nil {
-					fmt.Printf("%s ", string(*config.Description.KeyName))
-				}
+				fmt.Printf("%s ", string(config.KeyName))
 			}
 			fmt.Print("\n")
 			h.uccslpc.ApproveOrDenyDeviceConfiguration(msgCounter, true, "")
