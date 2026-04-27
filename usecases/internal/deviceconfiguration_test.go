@@ -4,10 +4,12 @@ import (
 	"github.com/enbility/eebus-go/features/server"
 	ucapi "github.com/enbility/eebus-go/usecases/api"
 	spineapi "github.com/enbility/spine-go/api"
+	spinemocks "github.com/enbility/spine-go/mocks"
 	"github.com/enbility/spine-go/model"
 	"github.com/enbility/spine-go/util"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func (s *InternalSuite) Test_ConfigurationWriteRequiresApproval() {
@@ -87,54 +89,31 @@ func (s *InternalSuite) Test_GroupPendingDeviceConfigurations() {
 		KeyName:   util.Ptr(model.DeviceConfigurationKeyNameTypeFailsafeConsumptionActivePowerLimit),
 		ValueType: util.Ptr(model.DeviceConfigurationKeyValueTypeTypeScaledNumber),
 		Unit:      util.Ptr(model.UnitOfMeasurementTypeW),
-		KeyId:     util.Ptr(model.DeviceConfigurationKeyIdType(0)),
 	}
 	failsafeDurationMinDesc := model.DeviceConfigurationKeyValueDescriptionDataType{
 		KeyName:   util.Ptr(model.DeviceConfigurationKeyNameTypeFailsafeDurationMinimum),
 		ValueType: util.Ptr(model.DeviceConfigurationKeyValueTypeTypeDuration),
-		KeyId:     util.Ptr(model.DeviceConfigurationKeyIdType(1)),
-	}
-	if dcs, err := server.NewDeviceConfiguration(s.localEntity); err == nil {
-		dcs.AddKeyValueDescription(failsafeLimitDesc)
-
-		// only add if it doesn't exist yet
-		filter := model.DeviceConfigurationKeyValueDescriptionDataType{
-			KeyName: util.Ptr(model.DeviceConfigurationKeyNameTypeFailsafeDurationMinimum),
-		}
-		if data, err := dcs.GetKeyValueDescriptionsForFilter(filter); err == nil && len(data) == 0 {
-			dcs.AddKeyValueDescription(failsafeDurationMinDesc)
-		}
-
-		value := &model.DeviceConfigurationKeyValueValueType{
-			ScaledNumber: model.NewScaledNumberType(0),
-		}
-		_ = dcs.UpdateKeyValueDataForFilter(
-			model.DeviceConfigurationKeyValueDataType{
-				Value:             value,
-				IsValueChangeable: util.Ptr(true),
-			},
-			nil,
-			model.DeviceConfigurationKeyValueDescriptionDataType{
-				KeyName: util.Ptr(model.DeviceConfigurationKeyNameTypeFailsafeConsumptionActivePowerLimit),
-			},
-		)
-
-		value = &model.DeviceConfigurationKeyValueValueType{
-			Duration: model.NewDurationType(0),
-		}
-		_ = dcs.UpdateKeyValueDataForFilter(
-			model.DeviceConfigurationKeyValueDataType{
-				Value:             value,
-				IsValueChangeable: util.Ptr(true),
-			},
-			nil,
-			model.DeviceConfigurationKeyValueDescriptionDataType{
-				KeyName: util.Ptr(model.DeviceConfigurationKeyNameTypeFailsafeDurationMinimum),
-			},
-		)
 	}
 
-	deviceConfigList := []model.DeviceConfigurationKeyValueDataType{{KeyId: util.Ptr(model.DeviceConfigurationKeyIdType(0))}, {KeyId: util.Ptr(model.DeviceConfigurationKeyIdType(1))}, {KeyId: util.Ptr(model.DeviceConfigurationKeyIdType(2))}}
+	dcs, err := server.NewDeviceConfiguration(s.localEntity)
+	require.NoError(s.T(), err)
+	failsafeLimitDesc.KeyId = dcs.AddKeyValueDescription(failsafeLimitDesc)
+	require.NotNil(s.T(), failsafeLimitDesc.KeyId)
+	failsafeDurationMinDesc.KeyId = dcs.AddKeyValueDescription(failsafeDurationMinDesc)
+	require.NotNil(s.T(), failsafeDurationMinDesc.KeyId)
+
+	value := &model.DeviceConfigurationKeyValueValueType{
+		ScaledNumber: model.NewScaledNumberType(0),
+	}
+	deviceConfigList := []model.DeviceConfigurationKeyValueDataType{
+		{
+			KeyId:             failsafeLimitDesc.KeyId,
+			Value:             value,
+			IsValueChangeable: util.Ptr(true),
+		},
+		{KeyId: failsafeDurationMinDesc.KeyId},
+		{KeyId: util.Ptr(model.DeviceConfigurationKeyIdType(100))},
+	}
 	cmd := model.CmdType{DeviceConfigurationKeyValueListData: util.Ptr(model.DeviceConfigurationKeyValueListDataType{DeviceConfigurationKeyValueData: deviceConfigList})}
 	msg := spineapi.Message{Cmd: cmd}
 	pendingDeviceConfigs := map[model.MsgCounterType]*spineapi.Message{model.MsgCounterType(1): &msg}
@@ -142,10 +121,88 @@ func (s *InternalSuite) Test_GroupPendingDeviceConfigurations() {
 	// For one of the KeyIds no corresponding device configuration exists, that element should thus be skipped
 	expected := map[model.MsgCounterType][]ucapi.PendingDeviceConfiguration{
 		model.MsgCounterType(1): {
-			{Description: &failsafeLimitDesc},
-			{Description: &failsafeDurationMinDesc},
+			{
+				Description:       failsafeLimitDesc,
+				KeyName:           model.DeviceConfigurationKeyNameTypeFailsafeConsumptionActivePowerLimit,
+				Value:             value,
+				IsValueChangeable: util.Ptr(true),
+			},
+			{
+				Description: failsafeDurationMinDesc,
+				KeyName:     model.DeviceConfigurationKeyNameTypeFailsafeDurationMinimum,
+			},
 		},
 	}
-	assert.Equal(s.T(), groupedConfigurations, expected)
+	assert.Equal(s.T(), expected, groupedConfigurations)
+}
 
+func (s *InternalSuite) Test_GroupPendingDeviceConfigurations_SkipsInvalidEntries() {
+	descriptionWithoutKeyName := model.DeviceConfigurationKeyValueDescriptionDataType{
+		ValueType: util.Ptr(model.DeviceConfigurationKeyValueTypeTypeString),
+	}
+	validDescription := model.DeviceConfigurationKeyValueDescriptionDataType{
+		KeyName:   util.Ptr(model.DeviceConfigurationKeyNameTypeFailsafeConsumptionActivePowerLimit),
+		ValueType: util.Ptr(model.DeviceConfigurationKeyValueTypeTypeScaledNumber),
+	}
+
+	dcs, err := server.NewDeviceConfiguration(s.localEntity)
+	require.NoError(s.T(), err)
+	descriptionWithoutKeyName.KeyId = dcs.AddKeyValueDescription(descriptionWithoutKeyName)
+	require.NotNil(s.T(), descriptionWithoutKeyName.KeyId)
+	validDescription.KeyId = dcs.AddKeyValueDescription(validDescription)
+	require.NotNil(s.T(), validDescription.KeyId)
+
+	msgWithoutDeviceConfigurationData := spineapi.Message{}
+	msgWithInvalidEntries := spineapi.Message{
+		Cmd: model.CmdType{
+			DeviceConfigurationKeyValueListData: util.Ptr(model.DeviceConfigurationKeyValueListDataType{
+				DeviceConfigurationKeyValueData: []model.DeviceConfigurationKeyValueDataType{
+					{},
+					{KeyId: descriptionWithoutKeyName.KeyId},
+					{KeyId: validDescription.KeyId},
+				},
+			}),
+		},
+	}
+	pendingDeviceConfigs := map[model.MsgCounterType]*spineapi.Message{
+		model.MsgCounterType(1): &msgWithoutDeviceConfigurationData,
+		model.MsgCounterType(2): &msgWithInvalidEntries,
+	}
+
+	groupedConfigurations := GroupPendingDeviceConfigurations(pendingDeviceConfigs, s.localEntity)
+
+	expected := map[model.MsgCounterType][]ucapi.PendingDeviceConfiguration{
+		model.MsgCounterType(2): {
+			{
+				Description: validDescription,
+				KeyName:     model.DeviceConfigurationKeyNameTypeFailsafeConsumptionActivePowerLimit,
+			},
+		},
+	}
+	assert.Equal(s.T(), expected, groupedConfigurations)
+}
+
+func (s *InternalSuite) Test_GroupPendingDeviceConfigurations_ReturnsEmptyResultWhenDeviceConfigurationFeatureIsMissing() {
+	localEntity := spinemocks.NewEntityLocalInterface(s.T())
+	localEntity.EXPECT().Device().Return(nil)
+	localEntity.EXPECT().
+		FeatureOfTypeAndRole(model.FeatureTypeTypeDeviceConfiguration, model.RoleTypeServer).
+		Return(nil)
+
+	msg := spineapi.Message{
+		Cmd: model.CmdType{
+			DeviceConfigurationKeyValueListData: util.Ptr(model.DeviceConfigurationKeyValueListDataType{
+				DeviceConfigurationKeyValueData: []model.DeviceConfigurationKeyValueDataType{
+					{KeyId: util.Ptr(model.DeviceConfigurationKeyIdType(0))},
+				},
+			}),
+		},
+	}
+	pendingDeviceConfigs := map[model.MsgCounterType]*spineapi.Message{
+		model.MsgCounterType(1): &msg,
+	}
+
+	groupedConfigurations := GroupPendingDeviceConfigurations(pendingDeviceConfigs, localEntity)
+
+	assert.Empty(s.T(), groupedConfigurations)
 }
