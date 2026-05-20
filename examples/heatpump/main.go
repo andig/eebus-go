@@ -115,7 +115,7 @@ func (h *heatpump) run() {
 	}
 
 	h.AddFeatures()
-	_ = spine.Events.Subscribe(h)
+	h.myService.LocalDevice().Events().Subscribe(h)
 
 	if len(config.remoteSKI) == 0 && pairingConfig == nil {
 		os.Exit(0)

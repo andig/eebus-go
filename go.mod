@@ -6,7 +6,7 @@ toolchain go1.24.4
 
 require (
 	github.com/enbility/ship-go v0.6.1-0.20260518113001-134687068e3c
-	github.com/enbility/spine-go v0.0.0-20250703115254-5468324c5be5
+	github.com/enbility/spine-go v0.7.1-0.20260520153416-0104ce40c885
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/exp/jsonrpc2 v0.0.0-20240909161429-701f63a606c0
 )
@@ -21,8 +21,8 @@ require (
 	github.com/govalues/decimal v0.1.36 // indirect
 	github.com/miekg/dns v1.1.72 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/rickb777/period v1.0.15 // indirect
-	github.com/rickb777/plural v1.4.4 // indirect
+	github.com/rickb777/period v1.0.22 // indirect
+	github.com/rickb777/plural v1.4.7 // indirect
 	github.com/stretchr/objx v0.5.3 // indirect
 	gitlab.com/c0b/go-ordered-json v0.0.0-20201030195603-febf46534d5a // indirect
 	go.uber.org/mock v0.6.0 // indirect
