@@ -22,6 +22,9 @@ type LPC struct {
 	pendingMux    sync.Mutex
 	pendingLimits map[model.MsgCounterType]*spineapi.Message
 
+	pendingDeviceConfigMux sync.Mutex
+	pendingDeviceConfigs   map[model.MsgCounterType]*spineapi.Message
+
 	heartbeatDiag *features.DeviceDiagnosis
 
 	heartbeatKeoWorkaround bool // required because KEO Stack uses multiple identical entities for the same functionality, and it is not clear which to use
@@ -77,8 +80,9 @@ func NewLPC(localEntity spineapi.EntityLocalInterface, eventCB api.EntityEventCa
 	)
 
 	uc := &LPC{
-		UseCaseBase:   usecase,
-		pendingLimits: make(map[model.MsgCounterType]*spineapi.Message),
+		UseCaseBase:          usecase,
+		pendingLimits:        make(map[model.MsgCounterType]*spineapi.Message),
+		pendingDeviceConfigs: make(map[model.MsgCounterType]*spineapi.Message),
 	}
 
 	_ = spine.Events.Subscribe(uc)
@@ -165,7 +169,7 @@ func (e *LPC) loadControlWriteCB(msg *spineapi.Message) {
 		if _, ok := e.pendingLimits[*msg.RequestHeader.MsgCounter]; !ok {
 			e.pendingLimits[*msg.RequestHeader.MsgCounter] = msg
 			e.pendingMux.Unlock()
-			e.EventCB(msg.DeviceRemote.Ski(), msg.DeviceRemote, msg.EntityRemote, WriteApprovalRequired)
+			e.EventCB(msg.DeviceRemote.Ski(), msg.DeviceRemote, msg.EntityRemote, LimitWriteApprovalRequired)
 			return
 		}
 	}
@@ -173,6 +177,53 @@ func (e *LPC) loadControlWriteCB(msg *spineapi.Message) {
 
 	// approve, because this is no request for this usecase
 	go e.approveOrDenyConsumptionLimit(msg, true, "")
+}
+
+func (e *LPC) approveOrDenyDeviceConfiguration(msg *spineapi.Message, approve bool, reason string) {
+	f := e.LocalEntity.FeatureOfTypeAndRole(model.FeatureTypeTypeDeviceConfiguration, model.RoleTypeServer)
+
+	result := model.ErrorType{
+		ErrorNumber: model.ErrorNumberType(0),
+	}
+
+	if !approve {
+		result.ErrorNumber = model.ErrorNumberType(7)
+		result.Description = util.Ptr(model.DescriptionType(reason))
+	}
+
+	f.ApproveOrDenyWrite(msg, result)
+}
+
+// callback invoked on incoming write messages to this
+// DeviceConfiguration server feature.
+// the implementation only considers write messages for this use case and
+// approves all others
+func (e *LPC) deviceConfigurationWriteCB(msg *spineapi.Message) {
+	configsToApprove := map[model.DeviceConfigurationKeyNameType]struct{}{
+		model.DeviceConfigurationKeyNameTypeFailsafeConsumptionActivePowerLimit: {},
+		model.DeviceConfigurationKeyNameTypeFailsafeDurationMinimum:             {},
+	}
+	approvalRequired, err := internal.ConfigurationWriteRequiresApproval(msg, e.LocalEntity, configsToApprove)
+	if err != nil {
+		logging.Log().Errorf("LPC deviceConfigurationWriteCB: %s", err.Error())
+		return
+	}
+
+	if approvalRequired {
+		e.pendingDeviceConfigMux.Lock()
+		if _, exists := e.pendingDeviceConfigs[*msg.RequestHeader.MsgCounter]; !exists {
+			e.pendingDeviceConfigs[*msg.RequestHeader.MsgCounter] = msg
+			// Unlock before calling EventCB to avoid deadlock (EventCB will need to read pendingDeviceConfigs)
+			e.pendingDeviceConfigMux.Unlock()
+			e.EventCB(msg.DeviceRemote.Ski(), msg.DeviceRemote, msg.EntityRemote, ConfigurationWriteApprovalRequired)
+			return
+		}
+		e.pendingDeviceConfigMux.Unlock()
+		return
+	}
+
+	// If neither a failsafe duration nor a failsafe limit were set this message does not pertain to this use case so we accept
+	go e.approveOrDenyDeviceConfiguration(msg, true, "")
 }
 
 func (e *LPC) AddFeatures() {
@@ -213,6 +264,7 @@ func (e *LPC) AddFeatures() {
 	f = e.LocalEntity.GetOrAddFeature(model.FeatureTypeTypeDeviceConfiguration, model.RoleTypeServer)
 	f.AddFunctionType(model.FunctionTypeDeviceConfigurationKeyValueDescriptionListData, true, false)
 	f.AddFunctionType(model.FunctionTypeDeviceConfigurationKeyValueListData, true, true)
+	_ = f.AddWriteApprovalCallback(e.deviceConfigurationWriteCB)
 
 	if dcs, err := server.NewDeviceConfiguration(e.LocalEntity); err == nil {
 		dcs.AddKeyValueDescription(

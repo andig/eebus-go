@@ -184,14 +184,25 @@ func (h *hems) run() {
 
 func (h *hems) OnLPCEvent(ski string, device spineapi.DeviceRemoteInterface, entity spineapi.EntityRemoteInterface, event api.EventType) {
 	switch event {
-	case cslpc.WriteApprovalRequired:
+	case cslpc.LimitWriteApprovalRequired:
 		// get pending writes
 		pendingWrites := h.uccslpc.PendingConsumptionLimits()
 
 		// approve any write
 		for msgCounter, write := range pendingWrites {
-			fmt.Println("Approving LPC write with msgCounter", msgCounter, "and limit", write.Value, "W")
+			fmt.Println("Approving LPC limit write with msgCounter", msgCounter, "and limit", write.Value, "W")
 			h.uccslpc.ApproveOrDenyConsumptionLimit(msgCounter, true, "")
+		}
+	case cslpc.ConfigurationWriteApprovalRequired:
+		pendingDeviceConfigWrites := h.uccslpc.PendingDeviceConfigurations()
+
+		for msgCounter, configs := range pendingDeviceConfigWrites {
+			fmt.Printf("Approving LPC device config write with msgCounter %d for features: ", msgCounter)
+			for _, config := range configs {
+				fmt.Printf("%s ", string(config.KeyName))
+			}
+			fmt.Print("\n")
+			h.uccslpc.ApproveOrDenyDeviceConfiguration(msgCounter, true, "")
 		}
 	case cslpc.DataUpdateLimit:
 		if currentLimit, err := h.uccslpc.ConsumptionLimit(); err == nil {
@@ -204,14 +215,29 @@ func (h *hems) OnLPCEvent(ski string, device spineapi.DeviceRemoteInterface, ent
 
 func (h *hems) OnLPPEvent(ski string, device spineapi.DeviceRemoteInterface, entity spineapi.EntityRemoteInterface, event api.EventType) {
 	switch event {
-	case cslpp.WriteApprovalRequired:
-		// get pending writes
+	case cslpp.LimitWriteApprovalRequired:
+		// get pending limit writes
 		pendingWrites := h.uccslpp.PendingProductionLimits()
 
 		// approve any write
 		for msgCounter, write := range pendingWrites {
-			fmt.Println("Approving LPP write with msgCounter", msgCounter, "and limit", write.Value, "W")
+			fmt.Println("Approving LPP limit write with msgCounter", msgCounter, "and limit", write.Value, "W")
 			h.uccslpp.ApproveOrDenyProductionLimit(msgCounter, true, "")
+		}
+	case cslpp.ConfigurationWriteApprovalRequired:
+		// get pending device config writes
+		pendingDeviceConfigWrites := h.uccslpp.PendingDeviceConfigurations()
+
+		// approve any write
+		for msgCounter, configs := range pendingDeviceConfigWrites {
+			fmt.Printf("Approving LPP device config write with msgCounter %d for features: ", msgCounter)
+			for _, config := range configs {
+				if config.Description.KeyName != nil {
+					fmt.Printf("%s ", string(*config.Description.KeyName))
+				}
+			}
+			fmt.Print("\n")
+			h.uccslpp.ApproveOrDenyDeviceConfiguration(msgCounter, true, "")
 		}
 	case cslpp.DataUpdateLimit:
 		if currentLimit, err := h.uccslpp.ProductionLimit(); err == nil {
