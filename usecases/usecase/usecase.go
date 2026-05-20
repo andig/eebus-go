@@ -8,7 +8,6 @@ import (
 	"github.com/enbility/eebus-go/api"
 	spineapi "github.com/enbility/spine-go/api"
 	"github.com/enbility/spine-go/model"
-	"github.com/enbility/spine-go/spine"
 )
 
 type UseCaseBase struct {
@@ -71,7 +70,7 @@ func NewUseCaseBase(
 		validEntityTypes:          validEntityTypes,
 	}
 
-	_ = spine.Events.Subscribe(ucb)
+	_ = localEntity.Device().Events().Subscribe(ucb)
 
 	return ucb
 }
