@@ -6,7 +6,7 @@ toolchain go1.24.4
 
 require (
 	github.com/enbility/ship-go v0.6.1-0.20260518113001-134687068e3c
-	github.com/enbility/spine-go v0.7.1-0.20260225082930-65ec71eb8fe9
+	github.com/enbility/spine-go v0.7.1-0.20260520153416-0104ce40c885
 	github.com/stretchr/testify v1.11.1
 	golang.org/x/exp/jsonrpc2 v0.0.0-20240909161429-701f63a606c0
 )
