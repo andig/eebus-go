@@ -61,7 +61,7 @@ func (s *MuMPCSuite) BeforeTest(_, _ string) {
 		[]shipapi.DeviceCategoryType{shipapi.DeviceCategoryTypeEnergyManagementSystem},
 		model.DeviceTypeTypeEnergyManagementSystem,
 		[]model.EntityTypeType{model.EntityTypeTypeInverter},
-		9999, cert, time.Second*4)
+		9999, cert, time.Second*4, nil, nil)
 
 	serviceHandler := mocks.NewServiceReaderInterface(s.T())
 	serviceHandler.EXPECT().ServicePairingDetailUpdate(mock.Anything, mock.Anything).Return().Maybe()
