@@ -54,7 +54,7 @@ func (s *GcpMpcgSuite) BeforeTest(suiteName, testName string) {
 		[]shipapi.DeviceCategoryType{shipapi.DeviceCategoryTypeGridConnectionHub},
 		model.DeviceTypeTypeEnergyManagementSystem,
 		[]model.EntityTypeType{model.EntityTypeTypeInverter},
-		9999, cert, time.Second*4)
+		9999, cert, time.Second*4, nil, nil)
 
 	serviceHandler := mocks.NewServiceReaderInterface(s.T())
 	serviceHandler.EXPECT().ServicePairingDetailUpdate(mock.Anything, mock.Anything).Return().Maybe()

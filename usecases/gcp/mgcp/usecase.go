@@ -7,7 +7,6 @@ import (
 	"github.com/enbility/eebus-go/usecases/usecase"
 	spineapi "github.com/enbility/spine-go/api"
 	"github.com/enbility/spine-go/model"
-	"github.com/enbility/spine-go/spine"
 	"github.com/enbility/spine-go/util"
 )
 
@@ -160,7 +159,7 @@ func NewMGCP(
 		frequencyConfig:  monitorFrequencyConfig,
 	}
 
-	_ = spine.Events.Subscribe(uc)
+	_ = localEntity.Device().Events().Subscribe(uc)
 
 	return uc, nil
 }
