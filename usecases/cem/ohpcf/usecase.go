@@ -6,7 +6,6 @@ import (
 	"github.com/enbility/eebus-go/usecases/usecase"
 	spineapi "github.com/enbility/spine-go/api"
 	"github.com/enbility/spine-go/model"
-	"github.com/enbility/spine-go/spine"
 )
 
 type OHPCF struct {
@@ -49,8 +48,6 @@ func NewOHPCF(localEntity spineapi.EntityLocalInterface, eventCB api.EntityEvent
 	uc := &OHPCF{
 		UseCaseBase: usecase,
 	}
-
-	_ = spine.Events.Subscribe(uc)
 
 	return uc
 }

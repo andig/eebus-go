@@ -268,7 +268,42 @@ func (s *CemOhPCFSuite) Test_SchedulePowerConsumptionProcess() {
 	_, err := s.sut.SchedulePowerConsumptionProcess(s.mockRemoteEntity, time.Now(), nil)
 	assert.NotNil(s.T(), err)
 
-	msgCounter, err := s.sut.SchedulePowerConsumptionProcess(s.monitoredEntity, time.Now(), nil)
+	// Without valid data, the call should fail
+	_, err = s.sut.SchedulePowerConsumptionProcess(s.monitoredEntity, time.Now(), nil)
+	assert.NotNil(s.T(), err)
+
+	// Set up valid SmartEnergyManagementPs data
+	data := &model.SmartEnergyManagementPsDataType{
+		Alternatives: []model.SmartEnergyManagementPsAlternativesType{{
+			PowerSequence: []model.SmartEnergyManagementPsPowerSequenceType{{
+				Description: &model.PowerSequenceDescriptionDataType{
+					SequenceId: util.Ptr(model.PowerSequenceIdType(1)),
+				},
+				State: &model.PowerSequenceStateDataType{
+					State: util.Ptr(model.PowerSequenceStateTypeInactive),
+				},
+				OperatingConstraintsInterrupt: &model.OperatingConstraintsInterruptDataType{
+					IsPausable:  util.Ptr(true),
+					IsStoppable: util.Ptr(true),
+				},
+				PowerTimeSlot: []model.SmartEnergyManagementPsPowerTimeSlotType{{
+					ValueList: &model.SmartEnergyManagementPsPowerTimeSlotValueListType{
+						Value: []model.PowerTimeSlotValueDataType{{
+							Value:     model.NewScaledNumberType(1000),
+							ValueType: util.Ptr(model.PowerTimeSlotValueTypeTypePower),
+						}},
+					},
+				}},
+			}},
+		}},
+	}
+
+	rFeature := s.remoteDevice.FeatureByEntityTypeAndRole(s.monitoredEntity, model.FeatureTypeTypeSmartEnergyManagementPs, model.RoleTypeServer)
+	_, fErr := rFeature.UpdateData(true, model.FunctionTypeSmartEnergyManagementPsData, data, nil, nil)
+	assert.Nil(s.T(), fErr)
+
+	startTime := time.Now().Add(time.Hour)
+	msgCounter, err := s.sut.SchedulePowerConsumptionProcess(s.monitoredEntity, startTime, nil)
 	assert.NotNil(s.T(), msgCounter)
 	assert.Nil(s.T(), err)
 }
@@ -276,6 +311,40 @@ func (s *CemOhPCFSuite) Test_SchedulePowerConsumptionProcess() {
 func (s *CemOhPCFSuite) Test_StopAbortPowerConsumptionProcess() {
 	_, err := s.sut.AbortPowerConsumptionProcess(s.mockRemoteEntity, nil)
 	assert.NotNil(s.T(), err)
+
+	// Without valid data, the call should fail
+	_, err = s.sut.AbortPowerConsumptionProcess(s.monitoredEntity, nil)
+	assert.NotNil(s.T(), err)
+
+	// Set up valid SmartEnergyManagementPs data
+	data := &model.SmartEnergyManagementPsDataType{
+		Alternatives: []model.SmartEnergyManagementPsAlternativesType{{
+			PowerSequence: []model.SmartEnergyManagementPsPowerSequenceType{{
+				Description: &model.PowerSequenceDescriptionDataType{
+					SequenceId: util.Ptr(model.PowerSequenceIdType(1)),
+				},
+				State: &model.PowerSequenceStateDataType{
+					State: util.Ptr(model.PowerSequenceStateTypeRunning),
+				},
+				OperatingConstraintsInterrupt: &model.OperatingConstraintsInterruptDataType{
+					IsPausable:  util.Ptr(true),
+					IsStoppable: util.Ptr(true),
+				},
+				PowerTimeSlot: []model.SmartEnergyManagementPsPowerTimeSlotType{{
+					ValueList: &model.SmartEnergyManagementPsPowerTimeSlotValueListType{
+						Value: []model.PowerTimeSlotValueDataType{{
+							Value:     model.NewScaledNumberType(1000),
+							ValueType: util.Ptr(model.PowerTimeSlotValueTypeTypePower),
+						}},
+					},
+				}},
+			}},
+		}},
+	}
+
+	rFeature := s.remoteDevice.FeatureByEntityTypeAndRole(s.monitoredEntity, model.FeatureTypeTypeSmartEnergyManagementPs, model.RoleTypeServer)
+	_, fErr := rFeature.UpdateData(true, model.FunctionTypeSmartEnergyManagementPsData, data, nil, nil)
+	assert.Nil(s.T(), fErr)
 
 	msgCounter, err := s.sut.AbortPowerConsumptionProcess(s.monitoredEntity, nil)
 	assert.NotNil(s.T(), msgCounter)
@@ -286,6 +355,40 @@ func (s *CemOhPCFSuite) Test_PausePowerConsumptionProcess() {
 	_, err := s.sut.PausePowerConsumptionProcess(s.mockRemoteEntity, nil)
 	assert.NotNil(s.T(), err)
 
+	// Without valid data, the call should fail
+	_, err = s.sut.PausePowerConsumptionProcess(s.monitoredEntity, nil)
+	assert.NotNil(s.T(), err)
+
+	// Set up valid SmartEnergyManagementPs data
+	data := &model.SmartEnergyManagementPsDataType{
+		Alternatives: []model.SmartEnergyManagementPsAlternativesType{{
+			PowerSequence: []model.SmartEnergyManagementPsPowerSequenceType{{
+				Description: &model.PowerSequenceDescriptionDataType{
+					SequenceId: util.Ptr(model.PowerSequenceIdType(1)),
+				},
+				State: &model.PowerSequenceStateDataType{
+					State: util.Ptr(model.PowerSequenceStateTypeRunning),
+				},
+				OperatingConstraintsInterrupt: &model.OperatingConstraintsInterruptDataType{
+					IsPausable:  util.Ptr(true),
+					IsStoppable: util.Ptr(true),
+				},
+				PowerTimeSlot: []model.SmartEnergyManagementPsPowerTimeSlotType{{
+					ValueList: &model.SmartEnergyManagementPsPowerTimeSlotValueListType{
+						Value: []model.PowerTimeSlotValueDataType{{
+							Value:     model.NewScaledNumberType(1000),
+							ValueType: util.Ptr(model.PowerTimeSlotValueTypeTypePower),
+						}},
+					},
+				}},
+			}},
+		}},
+	}
+
+	rFeature := s.remoteDevice.FeatureByEntityTypeAndRole(s.monitoredEntity, model.FeatureTypeTypeSmartEnergyManagementPs, model.RoleTypeServer)
+	_, fErr := rFeature.UpdateData(true, model.FunctionTypeSmartEnergyManagementPsData, data, nil, nil)
+	assert.Nil(s.T(), fErr)
+
 	msgCounter, err := s.sut.PausePowerConsumptionProcess(s.monitoredEntity, nil)
 	assert.NotNil(s.T(), msgCounter)
 	assert.Nil(s.T(), err)
@@ -294,6 +397,40 @@ func (s *CemOhPCFSuite) Test_PausePowerConsumptionProcess() {
 func (s *CemOhPCFSuite) Test_ResumePowerConsumptionProcess() {
 	_, err := s.sut.ResumePowerConsumptionProcess(s.mockRemoteEntity, nil)
 	assert.NotNil(s.T(), err)
+
+	// Without valid data, the call should fail
+	_, err = s.sut.ResumePowerConsumptionProcess(s.monitoredEntity, nil)
+	assert.NotNil(s.T(), err)
+
+	// Set up valid SmartEnergyManagementPs data with paused state
+	data := &model.SmartEnergyManagementPsDataType{
+		Alternatives: []model.SmartEnergyManagementPsAlternativesType{{
+			PowerSequence: []model.SmartEnergyManagementPsPowerSequenceType{{
+				Description: &model.PowerSequenceDescriptionDataType{
+					SequenceId: util.Ptr(model.PowerSequenceIdType(1)),
+				},
+				State: &model.PowerSequenceStateDataType{
+					State: util.Ptr(model.PowerSequenceStateTypeScheduledPaused),
+				},
+				OperatingConstraintsInterrupt: &model.OperatingConstraintsInterruptDataType{
+					IsPausable:  util.Ptr(true),
+					IsStoppable: util.Ptr(true),
+				},
+				PowerTimeSlot: []model.SmartEnergyManagementPsPowerTimeSlotType{{
+					ValueList: &model.SmartEnergyManagementPsPowerTimeSlotValueListType{
+						Value: []model.PowerTimeSlotValueDataType{{
+							Value:     model.NewScaledNumberType(1000),
+							ValueType: util.Ptr(model.PowerTimeSlotValueTypeTypePower),
+						}},
+					},
+				}},
+			}},
+		}},
+	}
+
+	rFeature := s.remoteDevice.FeatureByEntityTypeAndRole(s.monitoredEntity, model.FeatureTypeTypeSmartEnergyManagementPs, model.RoleTypeServer)
+	_, fErr := rFeature.UpdateData(true, model.FunctionTypeSmartEnergyManagementPsData, data, nil, nil)
+	assert.Nil(s.T(), fErr)
 
 	msgCounter, err := s.sut.ResumePowerConsumptionProcess(s.monitoredEntity, nil)
 	assert.NotNil(s.T(), msgCounter)
