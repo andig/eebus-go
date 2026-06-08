@@ -8,7 +8,6 @@ import (
 	"github.com/enbility/eebus-go/api"
 	spineapi "github.com/enbility/spine-go/api"
 	"github.com/enbility/spine-go/model"
-	"github.com/enbility/spine-go/spine"
 )
 
 type UseCaseBase struct {
@@ -71,7 +70,7 @@ func NewUseCaseBase(
 		validEntityTypes:          validEntityTypes,
 	}
 
-	_ = spine.Events.Subscribe(ucb)
+	_ = localEntity.Device().Events().Subscribe(ucb)
 
 	return ucb
 }
@@ -223,8 +222,8 @@ func (u *UseCaseBase) updateRemoteEntityScenarios(
 func (u *UseCaseBase) removeDeviceFromAvailableEntityScenarios(device spineapi.DeviceRemoteInterface) {
 	indicies := u.entityScenarioIndicesOfDevice(device)
 
-	for _, i := range indicies {
-		u.removeEntityIndexFromAvailableEntityScenarios(i)
+	for i := len(indicies) - 1; i >= 0; i-- {
+		u.removeEntityIndexFromAvailableEntityScenarios(indicies[i])
 	}
 
 	if u.EventCB != nil && len(indicies) > 0 {

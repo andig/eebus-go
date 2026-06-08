@@ -59,7 +59,7 @@ func (s *UseCaseSuite) BeforeTest(suiteName, testName string) {
 		[]shipapi.DeviceCategoryType{shipapi.DeviceCategoryTypeEnergyManagementSystem},
 		model.DeviceTypeTypeEnergyManagementSystem,
 		[]model.EntityTypeType{model.EntityTypeTypeCEM},
-		9999, cert, time.Second*4)
+		9999, cert, time.Second*4, nil, nil)
 
 	serviceHandler := mocks.NewServiceReaderInterface(s.T())
 	serviceHandler.EXPECT().ServicePairingDetailUpdate(mock.Anything, mock.Anything).Return().Maybe()
@@ -151,6 +151,18 @@ func setupDevices(
 	f.AddFunctionType(model.FunctionTypeDeviceClassificationUserData, true, true)
 	localEntity.AddFeature(f)
 
+	remoteDeviceName := "remote"
+
+	remoteDevice, entities := addRemoteDevice(remoteDeviceName, remoteSki, localDevice, t)
+
+	localDevice.AddRemoteDeviceForSki(remoteSki, remoteDevice)
+
+	return localEntity, remoteDevice, entities
+}
+
+func addRemoteDevice(remoteDeviceName, remoteDeviceSki string, localDevice spineapi.DeviceLocalInterface, t *testing.T) (
+	spineapi.DeviceRemoteInterface,
+	[]spineapi.EntityRemoteInterface) {
 	writeHandler := shipmocks.NewShipConnectionDataWriterInterface(t)
 	writeHandler.EXPECT().WriteShipMessageWithPayload(mock.Anything).Return().Maybe()
 	sender := spine.NewSender(writeHandler)
@@ -198,8 +210,6 @@ func setupDevices(
 			},
 		},
 	}
-
-	remoteDeviceName := "remote"
 
 	var featureInformations []model.NodeManagementDetailedDiscoveryFeatureInformationType
 	for index, feature := range remoteFeatures {
@@ -260,7 +270,7 @@ func setupDevices(
 		FeatureInformation: featureInformations,
 	}
 
-	entities, err := remoteDevice.AddEntityAndFeatures(true, detailedData)
+	entities, err := remoteDevice.AddEntityAndFeatures(true, detailedData, nil)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -270,7 +280,7 @@ func setupDevices(
 		entity.UpdateDeviceAddress(*remoteDevice.Address())
 	}
 
-	localDevice.AddRemoteDeviceForSki(remoteSki, remoteDevice)
+	localDevice.AddRemoteDeviceForSki(remoteDeviceSki, remoteDevice)
 
-	return localEntity, remoteDevice, entities
+	return remoteDevice, entities
 }

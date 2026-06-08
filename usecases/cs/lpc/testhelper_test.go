@@ -53,7 +53,7 @@ func (s *CsLPCSuite) BeforeTest(suiteName, testName string) {
 		[]shipapi.DeviceCategoryType{shipapi.DeviceCategoryTypeEnergyManagementSystem},
 		model.DeviceTypeTypeEnergyManagementSystem,
 		[]model.EntityTypeType{model.EntityTypeTypeCEM},
-		9999, cert, time.Second*4)
+		9999, cert, time.Second*4, nil, nil)
 
 	serviceHandler := mocks.NewServiceReaderInterface(s.T())
 	serviceHandler.EXPECT().ServicePairingDetailUpdate(mock.Anything, mock.Anything).Return().Maybe()
@@ -111,6 +111,10 @@ func setupDevices(
 	remoteDevice := spine.NewDeviceRemote(localDevice, remoteSki, sender)
 
 	remoteDeviceName := "remote"
+	entityAddress := &model.EntityAddressType{
+		Device: util.Ptr(model.AddressDeviceType(remoteDeviceName)),
+		Entity: []model.AddressEntityType{1},
+	}
 
 	var remoteFeatures = []struct {
 		featureType   model.FeatureTypeType
@@ -179,18 +183,15 @@ func setupDevices(
 		EntityInformation: []model.NodeManagementDetailedDiscoveryEntityInformationType{
 			{
 				Description: &model.NetworkManagementEntityDescriptionDataType{
-					EntityAddress: &model.EntityAddressType{
-						Device: util.Ptr(model.AddressDeviceType(remoteDeviceName)),
-						Entity: []model.AddressEntityType{1},
-					},
-					EntityType: util.Ptr(model.EntityTypeTypeGridGuard),
+					EntityAddress: entityAddress,
+					EntityType:    util.Ptr(model.EntityTypeTypeGridGuard),
 				},
 			},
 		},
 		FeatureInformation: featureInformations,
 	}
 
-	entities, err := remoteDevice.AddEntityAndFeatures(true, detailedData)
+	entities, err := remoteDevice.AddEntityAndFeatures(true, detailedData, entityAddress)
 	if err != nil {
 		fmt.Println(err)
 	}

@@ -187,3 +187,10 @@ const (
 	CompressorPowerConsumptionStateCompleted CompressorPowerConsumptionStateType = "completed"
 	CompressorPowerConsumptionStateStopped   CompressorPowerConsumptionStateType = "stopped" // (aborted)
 )
+
+type PendingDeviceConfiguration struct {
+	Description       model.DeviceConfigurationKeyValueDescriptionDataType `json:"description"`
+	KeyName           model.DeviceConfigurationKeyNameType                 `json:"keyName"`
+	Value             *model.DeviceConfigurationKeyValueValueType          `json:"value,omitempty"`
+	IsValueChangeable *bool                                                `json:"isValueChangeable,omitempty"`
+}

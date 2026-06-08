@@ -7,11 +7,11 @@ import (
 	features "github.com/enbility/eebus-go/features/client"
 	"github.com/enbility/eebus-go/features/server"
 	ucapi "github.com/enbility/eebus-go/usecases/api"
+	"github.com/enbility/eebus-go/usecases/internal"
 	"github.com/enbility/eebus-go/usecases/usecase"
 	"github.com/enbility/ship-go/logging"
 	spineapi "github.com/enbility/spine-go/api"
 	"github.com/enbility/spine-go/model"
-	"github.com/enbility/spine-go/spine"
 	"github.com/enbility/spine-go/util"
 )
 
@@ -21,6 +21,9 @@ type LPP struct {
 	pendingMux    sync.Mutex
 	pendingLimits map[model.MsgCounterType]*spineapi.Message
 
+	pendingDeviceConfigMux sync.Mutex
+	pendingDeviceConfigs   map[model.MsgCounterType]*spineapi.Message
+
 	heartbeatDiag *features.DeviceDiagnosis
 
 	heartbeatKeoWorkaround bool // required because KEO Stack uses multiple identical entities for the same functionality, and it is not clear which to use
@@ -28,8 +31,10 @@ type LPP struct {
 
 var _ ucapi.CsLPPInterface = (*LPP)(nil)
 
-// Add support for the Limitation of Power Production (LPC) use case
+// Add support for the Limitation of Power Production (LPP) use case
 // as a Controllable System actor
+//
+// Note: if the Monitoring of Power Consumption (MPC) or Monitoring of Grid Connection Point (MGCP) will be supported, add them first
 //
 // Parameters:
 //   - localEntity: The local entity which should support the use case
@@ -73,11 +78,12 @@ func NewLPP(localEntity spineapi.EntityLocalInterface, eventCB api.EntityEventCa
 	)
 
 	uc := &LPP{
-		UseCaseBase:   usecase,
-		pendingLimits: make(map[model.MsgCounterType]*spineapi.Message),
+		UseCaseBase:          usecase,
+		pendingLimits:        make(map[model.MsgCounterType]*spineapi.Message),
+		pendingDeviceConfigs: make(map[model.MsgCounterType]*spineapi.Message),
 	}
 
-	_ = spine.Events.Subscribe(uc)
+	_ = localEntity.Device().Events().Subscribe(uc)
 
 	return uc
 }
@@ -161,7 +167,7 @@ func (e *LPP) loadControlWriteCB(msg *spineapi.Message) {
 		if _, ok := e.pendingLimits[*msg.RequestHeader.MsgCounter]; !ok {
 			e.pendingLimits[*msg.RequestHeader.MsgCounter] = msg
 			e.pendingMux.Unlock()
-			e.EventCB(msg.DeviceRemote.Ski(), msg.DeviceRemote, msg.EntityRemote, WriteApprovalRequired)
+			e.EventCB(msg.DeviceRemote.Ski(), msg.DeviceRemote, msg.EntityRemote, LimitWriteApprovalRequired)
 			return
 		}
 	}
@@ -170,6 +176,53 @@ func (e *LPP) loadControlWriteCB(msg *spineapi.Message) {
 
 	// approve, because this is no request for this usecase
 	go e.approveOrDenyProductionLimit(msg, true, "")
+}
+
+func (e *LPP) approveOrDenyDeviceConfiguration(msg *spineapi.Message, approve bool, reason string) {
+	f := e.LocalEntity.FeatureOfTypeAndRole(model.FeatureTypeTypeDeviceConfiguration, model.RoleTypeServer)
+
+	result := model.ErrorType{
+		ErrorNumber: model.ErrorNumberType(0),
+	}
+
+	if !approve {
+		result.ErrorNumber = model.ErrorNumberType(7)
+		result.Description = util.Ptr(model.DescriptionType(reason))
+	}
+
+	f.ApproveOrDenyWrite(msg, result)
+}
+
+// callback invoked on incoming write messages to this
+// DeviceConfiguration server feature.
+// the implementation only considers write messages for this use case and
+// approves all others
+func (e *LPP) deviceConfigurationWriteCB(msg *spineapi.Message) {
+	configsToApprove := map[model.DeviceConfigurationKeyNameType]struct{}{
+		model.DeviceConfigurationKeyNameTypeFailsafeProductionActivePowerLimit: {},
+		model.DeviceConfigurationKeyNameTypeFailsafeDurationMinimum:            {},
+	}
+	approvalRequired, err := internal.ConfigurationWriteRequiresApproval(msg, e.LocalEntity, configsToApprove)
+	if err != nil {
+		logging.Log().Errorf("LPP deviceConfigurationWriteCB: %s", err.Error())
+		return
+	}
+
+	if approvalRequired {
+		e.pendingDeviceConfigMux.Lock()
+		if _, exists := e.pendingDeviceConfigs[*msg.RequestHeader.MsgCounter]; !exists {
+			e.pendingDeviceConfigs[*msg.RequestHeader.MsgCounter] = msg
+			// Unlock before calling EventCB to avoid deadlock (EventCB will need to read pendingDeviceConfigs)
+			e.pendingDeviceConfigMux.Unlock()
+			e.EventCB(msg.DeviceRemote.Ski(), msg.DeviceRemote, msg.EntityRemote, ConfigurationWriteApprovalRequired)
+			return
+		}
+		e.pendingDeviceConfigMux.Unlock()
+		return
+	}
+
+	// If neither a failsafe duration nor a failsafe limit were set this message does not pertain to this use case so we accept
+	go e.approveOrDenyDeviceConfiguration(msg, true, "")
 }
 
 func (e *LPP) AddFeatures() {
@@ -182,11 +235,12 @@ func (e *LPP) AddFeatures() {
 	f.AddFunctionType(model.FunctionTypeLoadControlLimitListData, true, true)
 	_ = f.AddWriteApprovalCallback(e.loadControlWriteCB)
 
+	measurementId := internal.GetPowerTotalMeasurementId(e.LocalEntity)
 	newLimitDesc := model.LoadControlLimitDescriptionDataType{
 		LimitType:      util.Ptr(model.LoadControlLimitTypeTypeSignDependentAbsValueLimit),
 		LimitCategory:  util.Ptr(model.LoadControlCategoryTypeObligation),
 		LimitDirection: util.Ptr(model.EnergyDirectionTypeProduce),
-		MeasurementId:  util.Ptr(model.MeasurementIdType(0)), // This is a fake Measurement ID, as there is no Electrical Connection server defined, it can't provide any meaningful. But KEO requires this to be set :(
+		MeasurementId:  util.Ptr(measurementId),
 		Unit:           util.Ptr(model.UnitOfMeasurementTypeW),
 		ScopeType:      util.Ptr(model.ScopeTypeTypeActivePowerLimit),
 	}
@@ -209,6 +263,7 @@ func (e *LPP) AddFeatures() {
 	f = e.LocalEntity.GetOrAddFeature(model.FeatureTypeTypeDeviceConfiguration, model.RoleTypeServer)
 	f.AddFunctionType(model.FunctionTypeDeviceConfigurationKeyValueDescriptionListData, true, false)
 	f.AddFunctionType(model.FunctionTypeDeviceConfigurationKeyValueListData, true, true)
+	_ = f.AddWriteApprovalCallback(e.deviceConfigurationWriteCB)
 
 	if dcs, err := server.NewDeviceConfiguration(e.LocalEntity); err == nil {
 		dcs.AddKeyValueDescription(
@@ -268,11 +323,11 @@ func (e *LPP) AddFeatures() {
 	f.AddFunctionType(model.FunctionTypeElectricalConnectionCharacteristicListData, true, false)
 
 	if ec, err := server.NewElectricalConnection(e.LocalEntity); err == nil {
-		// ElectricalConnectionId and ParameterId should be identical to the ones used
-		// in a MPC Server role implementation, which is not done here (yet)
+		electricalConnectionId := internal.GetElectricalConnectionId(e.LocalEntity)
+		parameterId := internal.GetParameterIdForACPowerTotalMeasurement(e.LocalEntity, electricalConnectionId, measurementId)
 		newCharData := model.ElectricalConnectionCharacteristicDataType{
-			ElectricalConnectionId: util.Ptr(model.ElectricalConnectionIdType(0)),
-			ParameterId:            util.Ptr(model.ElectricalConnectionParameterIdType(0)),
+			ElectricalConnectionId: util.Ptr(electricalConnectionId),
+			ParameterId:            util.Ptr(parameterId),
 			CharacteristicContext:  util.Ptr(model.ElectricalConnectionCharacteristicContextTypeEntity),
 			CharacteristicType:     util.Ptr(e.characteristicType()),
 			Unit:                   util.Ptr(model.UnitOfMeasurementTypeW),

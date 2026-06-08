@@ -7,6 +7,7 @@ import (
 	"github.com/enbility/eebus-go/api"
 	"github.com/enbility/eebus-go/features/server"
 	ucapi "github.com/enbility/eebus-go/usecases/api"
+	"github.com/enbility/eebus-go/usecases/internal"
 	"github.com/enbility/spine-go/model"
 	"github.com/enbility/spine-go/util"
 )
@@ -46,6 +47,11 @@ func (e *LPP) ProductionLimit() (limit ucapi.LoadLimit, resultErr error) {
 	if value.TimePeriod != nil && value.TimePeriod.EndTime != nil {
 		if duration, err := value.TimePeriod.GetDuration(); err == nil {
 			limit.Duration = duration
+			if limit.Duration == 0 {
+				// according to EEBus UC Implementation Guideline for LPC v1.0.0 section 2.2 item 1
+				// no IG exists for LPP at the moment, we assume the same should be valid here as well
+				limit.IsActive = false
+			}
 		}
 	}
 
@@ -265,6 +271,32 @@ func (e *LPP) SetFailsafeDurationMinimum(duration time.Duration, changeable bool
 		KeyName: util.Ptr(keyName),
 	}
 	return dc.UpdateKeyValueDataForFilter(data, nil, filter)
+}
+
+// return the currently pending incoming device configuration writes
+func (e *LPP) PendingDeviceConfigurations() map[model.MsgCounterType][]ucapi.PendingDeviceConfiguration {
+	e.pendingDeviceConfigMux.Lock()
+	defer e.pendingDeviceConfigMux.Unlock()
+
+	return internal.GroupPendingDeviceConfigurations(e.pendingDeviceConfigs, e.LocalEntity)
+}
+
+// accept or deny an incoming device configuration write
+//
+// use PendingDeviceConfigurations to get the list of currently pending requests
+func (e *LPP) ApproveOrDenyDeviceConfiguration(msgCounter model.MsgCounterType, approve bool, reason string) {
+	e.pendingDeviceConfigMux.Lock()
+	defer e.pendingDeviceConfigMux.Unlock()
+
+	msg, ok := e.pendingDeviceConfigs[msgCounter]
+	if !ok {
+		// no pending limit for this msgCounter, this is a caller error
+		return
+	}
+
+	e.approveOrDenyDeviceConfiguration(msg, approve, reason)
+
+	delete(e.pendingDeviceConfigs, msgCounter)
 }
 
 // Scenario 3
