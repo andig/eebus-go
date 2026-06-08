@@ -27,7 +27,6 @@ func (o *OHPCF) HandleEvent(payload spineapi.EventPayload) {
 	switch payload.Data.(type) {
 	case *model.SmartEnergyManagementPsDataType:
 		o.loadSmartEnergyManagementPsDataType(payload)
-		break
 	}
 }
 
