@@ -155,10 +155,8 @@ func (m *MGCP) Update(updateValueType ...usecaseapi.UpdateData) error {
 		switch update.(type) {
 		case usecaseapi.UpdateMeasurementData:
 			measurements = append(measurements, update.(usecaseapi.UpdateMeasurementData).MeasurementData())
-			break
 		case usecaseapi.UpdateConfigurationData:
 			configurations = append(configurations, update.(usecaseapi.UpdateConfigurationData).ConfigurationData())
-			break
 		default:
 			return errors.New("unsupported updateValueType")
 		}
