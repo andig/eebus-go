@@ -51,7 +51,7 @@ func (e *LPP) ProductionLimit(entity spineapi.EntityRemoteInterface) (
 		ScopeType:      util.Ptr(model.ScopeTypeTypeActivePowerLimit),
 	}
 	limitDescriptions, err := loadControl.GetLimitDescriptionsForFilter(filter)
-	if err != nil || len(limitDescriptions) != 1 {
+	if err != nil || len(limitDescriptions) != 1 || limitDescriptions[0].LimitId == nil {
 		return
 	}
 
