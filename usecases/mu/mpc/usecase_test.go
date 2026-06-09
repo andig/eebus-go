@@ -75,6 +75,8 @@ func (s *MuMpcUsecaseSuite) BeforeTest(_, _ string) {
 	s.mockedRemoteFeature.EXPECT().DataCopy(mock.Anything).Return(mock.Anything).Maybe()
 	s.mockedRemoteFeature.EXPECT().Address().Return(&model.FeatureAddressType{}).Maybe()
 	s.mockedRemoteFeature.EXPECT().Operations().Return(nil).Maybe()
+
+	s.localEntity = s.service.LocalDevice().EntityForType(model.EntityTypeTypeInverter)
 }
 
 func (s *MuMpcUsecaseSuite) Test_MpcOptionalParameters() {
@@ -285,7 +287,11 @@ func (s *MuMpcAbcSuite) Test_AddFeatures_NewElectricalConnectionError() {
 
 func (s *MuMpcUsecaseSuite) Test_configureMonitorPower() {
 	localEntity := spineMocks.NewEntityLocalInterface(s.T())
-	localEntity.EXPECT().Device().Return(nil)
+	mockedDevice := spineMocks.NewDeviceLocalInterface(s.T())
+	mockedEvents := spineMocks.NewEventsManagerInterface(s.T())
+	mockedEvents.EXPECT().Subscribe(mock.Anything).Return(nil).Maybe()
+	mockedDevice.EXPECT().Events().Return(mockedEvents).Maybe()
+	localEntity.EXPECT().Device().Return(mockedDevice)
 
 	anyFeature := spineMocks.NewFeatureLocalInterface(s.T())
 	anyFeature.EXPECT().DataCopy(mock.Anything).Return(nil)
@@ -359,7 +365,11 @@ func (s *MuMpcUsecaseSuite) Test_configureMonitorPower() {
 
 func (s *MuMpcUsecaseSuite) Test_configureMonitorEnergy() {
 	localEntity := spineMocks.NewEntityLocalInterface(s.T())
-	localEntity.EXPECT().Device().Return(nil)
+	mockedDevice := spineMocks.NewDeviceLocalInterface(s.T())
+	mockedEvents := spineMocks.NewEventsManagerInterface(s.T())
+	mockedEvents.EXPECT().Subscribe(mock.Anything).Return(nil).Maybe()
+	mockedDevice.EXPECT().Events().Return(mockedEvents).Maybe()
+	localEntity.EXPECT().Device().Return(mockedDevice)
 
 	anyFeature := spineMocks.NewFeatureLocalInterface(s.T())
 	anyFeature.EXPECT().DataCopy(mock.Anything).Return(nil)
@@ -427,7 +437,11 @@ func (s *MuMpcUsecaseSuite) Test_configureMonitorEnergy() {
 
 func (s *MuMpcUsecaseSuite) Test_configureMonitorCurrent() {
 	localEntity := spineMocks.NewEntityLocalInterface(s.T())
-	localEntity.EXPECT().Device().Return(nil)
+	mockedDevice := spineMocks.NewDeviceLocalInterface(s.T())
+	mockedEvents := spineMocks.NewEventsManagerInterface(s.T())
+	mockedEvents.EXPECT().Subscribe(mock.Anything).Return(nil).Maybe()
+	mockedDevice.EXPECT().Events().Return(mockedEvents).Maybe()
+	localEntity.EXPECT().Device().Return(mockedDevice)
 
 	anyFeature := spineMocks.NewFeatureLocalInterface(s.T())
 	anyFeature.EXPECT().DataCopy(mock.Anything).Return(nil).Maybe()
@@ -513,7 +527,11 @@ func (s *MuMpcUsecaseSuite) Test_configureMonitorCurrent() {
 
 func (s *MuMpcUsecaseSuite) Test_configureMonitorVoltage() {
 	localEntity := spineMocks.NewEntityLocalInterface(s.T())
-	localEntity.EXPECT().Device().Return(nil)
+	mockedDevice := spineMocks.NewDeviceLocalInterface(s.T())
+	mockedEvents := spineMocks.NewEventsManagerInterface(s.T())
+	mockedEvents.EXPECT().Subscribe(mock.Anything).Return(nil).Maybe()
+	mockedDevice.EXPECT().Events().Return(mockedEvents).Maybe()
+	localEntity.EXPECT().Device().Return(mockedDevice)
 
 	anyFeature := spineMocks.NewFeatureLocalInterface(s.T())
 	anyFeature.EXPECT().DataCopy(mock.Anything).Return(nil).Maybe()
@@ -588,7 +606,11 @@ func (s *MuMpcUsecaseSuite) Test_configureMonitorVoltage() {
 
 func (s *MuMpcUsecaseSuite) Test_configureMonitorFrequency() {
 	localEntity := spineMocks.NewEntityLocalInterface(s.T())
-	localEntity.EXPECT().Device().Return(nil)
+	mockedDevice := spineMocks.NewDeviceLocalInterface(s.T())
+	mockedEvents := spineMocks.NewEventsManagerInterface(s.T())
+	mockedEvents.EXPECT().Subscribe(mock.Anything).Return(nil).Maybe()
+	mockedDevice.EXPECT().Events().Return(mockedEvents).Maybe()
+	localEntity.EXPECT().Device().Return(mockedDevice)
 
 	anyFeature := spineMocks.NewFeatureLocalInterface(s.T())
 	anyFeature.EXPECT().DataCopy(mock.Anything).Return(nil)
@@ -660,6 +682,9 @@ func (s *MuMpcUsecaseSuite) TestAddFeatures() {
 		s.mockedLocalFeature = spineMocks.NewFeatureLocalInterface(s.T())
 		s.mockedLocalEntity.EXPECT().GetOrAddFeature(mock.Anything, mock.Anything).Return(s.mockedLocalFeature).Maybe()
 		s.mockedLocalEntity.EXPECT().Device().Return(s.mockedLocalDevice).Maybe()
+		mockedEvents := spineMocks.NewEventsManagerInterface(s.T())
+		mockedEvents.EXPECT().Subscribe(mock.Anything).Return(nil).Maybe()
+		s.mockedLocalDevice.EXPECT().Events().Return(mockedEvents).Maybe()
 		s.mockedLocalFeature.EXPECT().AddFunctionType(mock.Anything, mock.Anything, mock.Anything).Return().Maybe()
 		s.mockedLocalEntity.EXPECT().FeatureOfTypeAndRole(model.FeatureTypeTypeMeasurement, model.RoleTypeServer).Return(nil).Once().Maybe()
 

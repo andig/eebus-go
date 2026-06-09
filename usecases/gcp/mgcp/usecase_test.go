@@ -262,7 +262,7 @@ func (s *GcpMpcgSuite) Test_AddFeaturesElectricalConnectionNilError() {
 }
 
 func (s *MgcpUsecaseSuite) Test_configurePvFeedInLimitationFactorError() {
-	localEntity := s.service.LocalDevice().EntityForType(model.EntityTypeTypeInverter)
+	localEntity := s.service.LocalDevice().EntityForType(model.EntityTypeTypeGridGuard)
 
 	mgcp, err := NewMGCP(
 		localEntity,
@@ -307,7 +307,7 @@ func (s *MgcpUsecaseSuite) Test_configurePvFeedInLimitationFactorError() {
 }
 
 func (s *MgcpUsecaseSuite) Test_configureMonitorPowerError() {
-	localEntity := s.service.LocalDevice().EntityForType(model.EntityTypeTypeInverter)
+	localEntity := s.service.LocalDevice().EntityForType(model.EntityTypeTypeGridGuard)
 
 	mgcp, err := NewMGCP(
 		localEntity,
@@ -370,7 +370,7 @@ func (s *MgcpUsecaseSuite) Test_configureMonitorPowerError() {
 }
 
 func (s *MgcpUsecaseSuite) Test_configureGridFeedInError() {
-	localEntity := s.service.LocalDevice().EntityForType(model.EntityTypeTypeInverter)
+	localEntity := s.service.LocalDevice().EntityForType(model.EntityTypeTypeGridGuard)
 
 	mgcp, err := NewMGCP(
 		localEntity,
@@ -433,7 +433,7 @@ func (s *MgcpUsecaseSuite) Test_configureGridFeedInError() {
 }
 
 func (s *MgcpUsecaseSuite) Test_configureGridConsumptionError() {
-	localEntity := s.service.LocalDevice().EntityForType(model.EntityTypeTypeInverter)
+	localEntity := s.service.LocalDevice().EntityForType(model.EntityTypeTypeGridGuard)
 
 	mgcp, err := NewMGCP(
 		localEntity,
@@ -496,7 +496,7 @@ func (s *MgcpUsecaseSuite) Test_configureGridConsumptionError() {
 }
 
 func (s *MgcpUsecaseSuite) Test_configureMonitorCurrentError() {
-	localEntity := s.service.LocalDevice().EntityForType(model.EntityTypeTypeInverter)
+	localEntity := s.service.LocalDevice().EntityForType(model.EntityTypeTypeGridGuard)
 
 	mgcp, err := NewMGCP(
 		localEntity,
@@ -561,7 +561,7 @@ func (s *MgcpUsecaseSuite) Test_configureMonitorCurrentError() {
 }
 
 func (s *MgcpUsecaseSuite) Test_configureMonitorVoltageError() {
-	localEntity := s.service.LocalDevice().EntityForType(model.EntityTypeTypeInverter)
+	localEntity := s.service.LocalDevice().EntityForType(model.EntityTypeTypeGridGuard)
 
 	mgcp, err := NewMGCP(
 		localEntity,
@@ -635,7 +635,7 @@ func (s *MgcpUsecaseSuite) Test_configureMonitorVoltageError() {
 }
 
 func (s *MgcpUsecaseSuite) Test_configureMonitorFrequencyError() {
-	localEntity := s.service.LocalDevice().EntityForType(model.EntityTypeTypeInverter)
+	localEntity := s.service.LocalDevice().EntityForType(model.EntityTypeTypeGridGuard)
 
 	mgcp, err := NewMGCP(
 		localEntity,
