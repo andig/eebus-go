@@ -159,6 +159,58 @@ func (_c *CsLPCInterface_ApproveOrDenyConsumptionLimit_Call) RunAndReturn(run fu
 	return _c
 }
 
+// ApproveOrDenyDeviceConfiguration provides a mock function for the type CsLPCInterface
+func (_mock *CsLPCInterface) ApproveOrDenyDeviceConfiguration(msgCounter model.MsgCounterType, approve bool, reason string) {
+	_mock.Called(msgCounter, approve, reason)
+	return
+}
+
+// CsLPCInterface_ApproveOrDenyDeviceConfiguration_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ApproveOrDenyDeviceConfiguration'
+type CsLPCInterface_ApproveOrDenyDeviceConfiguration_Call struct {
+	*mock.Call
+}
+
+// ApproveOrDenyDeviceConfiguration is a helper method to define mock.On call
+//   - msgCounter model.MsgCounterType
+//   - approve bool
+//   - reason string
+func (_e *CsLPCInterface_Expecter) ApproveOrDenyDeviceConfiguration(msgCounter interface{}, approve interface{}, reason interface{}) *CsLPCInterface_ApproveOrDenyDeviceConfiguration_Call {
+	return &CsLPCInterface_ApproveOrDenyDeviceConfiguration_Call{Call: _e.mock.On("ApproveOrDenyDeviceConfiguration", msgCounter, approve, reason)}
+}
+
+func (_c *CsLPCInterface_ApproveOrDenyDeviceConfiguration_Call) Run(run func(msgCounter model.MsgCounterType, approve bool, reason string)) *CsLPCInterface_ApproveOrDenyDeviceConfiguration_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		var arg0 model.MsgCounterType
+		if args[0] != nil {
+			arg0 = args[0].(model.MsgCounterType)
+		}
+		var arg1 bool
+		if args[1] != nil {
+			arg1 = args[1].(bool)
+		}
+		var arg2 string
+		if args[2] != nil {
+			arg2 = args[2].(string)
+		}
+		run(
+			arg0,
+			arg1,
+			arg2,
+		)
+	})
+	return _c
+}
+
+func (_c *CsLPCInterface_ApproveOrDenyDeviceConfiguration_Call) Return() *CsLPCInterface_ApproveOrDenyDeviceConfiguration_Call {
+	_c.Call.Return()
+	return _c
+}
+
+func (_c *CsLPCInterface_ApproveOrDenyDeviceConfiguration_Call) RunAndReturn(run func(msgCounter model.MsgCounterType, approve bool, reason string)) *CsLPCInterface_ApproveOrDenyDeviceConfiguration_Call {
+	_c.Run(run)
+	return _c
+}
+
 // AvailableScenariosForEntity provides a mock function for the type CsLPCInterface
 func (_mock *CsLPCInterface) AvailableScenariosForEntity(entity api.EntityRemoteInterface) []uint {
 	ret := _mock.Called(entity)
@@ -630,6 +682,52 @@ func (_c *CsLPCInterface_PendingConsumptionLimits_Call) Return(msgCounterTypeToL
 }
 
 func (_c *CsLPCInterface_PendingConsumptionLimits_Call) RunAndReturn(run func() map[model.MsgCounterType]api0.LoadLimit) *CsLPCInterface_PendingConsumptionLimits_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// PendingDeviceConfigurations provides a mock function for the type CsLPCInterface
+func (_mock *CsLPCInterface) PendingDeviceConfigurations() map[model.MsgCounterType][]api0.PendingDeviceConfiguration {
+	ret := _mock.Called()
+
+	if len(ret) == 0 {
+		panic("no return value specified for PendingDeviceConfigurations")
+	}
+
+	var r0 map[model.MsgCounterType][]api0.PendingDeviceConfiguration
+	if returnFunc, ok := ret.Get(0).(func() map[model.MsgCounterType][]api0.PendingDeviceConfiguration); ok {
+		r0 = returnFunc()
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(map[model.MsgCounterType][]api0.PendingDeviceConfiguration)
+		}
+	}
+	return r0
+}
+
+// CsLPCInterface_PendingDeviceConfigurations_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'PendingDeviceConfigurations'
+type CsLPCInterface_PendingDeviceConfigurations_Call struct {
+	*mock.Call
+}
+
+// PendingDeviceConfigurations is a helper method to define mock.On call
+func (_e *CsLPCInterface_Expecter) PendingDeviceConfigurations() *CsLPCInterface_PendingDeviceConfigurations_Call {
+	return &CsLPCInterface_PendingDeviceConfigurations_Call{Call: _e.mock.On("PendingDeviceConfigurations")}
+}
+
+func (_c *CsLPCInterface_PendingDeviceConfigurations_Call) Run(run func()) *CsLPCInterface_PendingDeviceConfigurations_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run()
+	})
+	return _c
+}
+
+func (_c *CsLPCInterface_PendingDeviceConfigurations_Call) Return(msgCounterTypeToPendingDeviceConfigurations map[model.MsgCounterType][]api0.PendingDeviceConfiguration) *CsLPCInterface_PendingDeviceConfigurations_Call {
+	_c.Call.Return(msgCounterTypeToPendingDeviceConfigurations)
+	return _c
+}
+
+func (_c *CsLPCInterface_PendingDeviceConfigurations_Call) RunAndReturn(run func() map[model.MsgCounterType][]api0.PendingDeviceConfiguration) *CsLPCInterface_PendingDeviceConfigurations_Call {
 	_c.Call.Return(run)
 	return _c
 }
