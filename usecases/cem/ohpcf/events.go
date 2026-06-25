@@ -43,6 +43,11 @@ func (o *OHPCF) connected(entity spineapi.EntityRemoteInterface) {
 				logging.Log().Debug(err)
 			}
 		}
+
+		// read the current data as a subscription only delivers future updates
+		if _, err := semp.RequestData(); err != nil {
+			logging.Log().Debug(err)
+		}
 	}
 }
 
