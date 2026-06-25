@@ -47,20 +47,10 @@ func (s *MaMDTSuite) Test_Temperature() {
 	_, fErr = rFeature.UpdateData(true, model.FunctionTypeMeasurementListData, measData, nil, nil)
 	assert.Nil(s.T(), fErr)
 
-	// announced in degC, requested in degC
+	// announced in degC, requested in degC (conversion math covered by Test_convertTemperature)
 	data, err = s.sut.Temperature(s.monitoredEntity, model.UnitOfMeasurementTypedegC)
 	assert.Nil(s.T(), err)
 	assert.Equal(s.T(), 50.0, data)
-
-	// announced in degC, requested in degF
-	data, err = s.sut.Temperature(s.monitoredEntity, model.UnitOfMeasurementTypedegF)
-	assert.Nil(s.T(), err)
-	assert.Equal(s.T(), 122.0, data)
-
-	// announced in degC, requested in K
-	data, err = s.sut.Temperature(s.monitoredEntity, model.UnitOfMeasurementTypeK)
-	assert.Nil(s.T(), err)
-	assert.Equal(s.T(), 323.15, data)
 
 	// requested in an unsupported unit
 	_, err = s.sut.Temperature(s.monitoredEntity, model.UnitOfMeasurementTypeW)
