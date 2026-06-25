@@ -49,6 +49,8 @@ func NewOHPCF(localEntity spineapi.EntityLocalInterface, eventCB api.EntityEvent
 		UseCaseBase: usecase,
 	}
 
+	_ = localEntity.Device().Events().Subscribe(uc)
+
 	return uc
 }
 
