@@ -265,11 +265,11 @@ func (s *CemOhPCFSuite) Test_PowerConsumptionMinimalPauseDuration() {
 // Scenario 2
 
 func (s *CemOhPCFSuite) Test_SchedulePowerConsumptionProcess() {
-	_, err := s.sut.SchedulePowerConsumptionProcess(s.mockRemoteEntity, time.Now(), nil)
+	_, err := s.sut.SchedulePowerConsumptionProcess(s.mockRemoteEntity, 0, nil)
 	assert.NotNil(s.T(), err)
 
 	// Without valid data, the call should fail
-	_, err = s.sut.SchedulePowerConsumptionProcess(s.monitoredEntity, time.Now(), nil)
+	_, err = s.sut.SchedulePowerConsumptionProcess(s.monitoredEntity, 0, nil)
 	assert.NotNil(s.T(), err)
 
 	// Set up valid SmartEnergyManagementPs data
@@ -302,8 +302,7 @@ func (s *CemOhPCFSuite) Test_SchedulePowerConsumptionProcess() {
 	_, fErr := rFeature.UpdateData(true, model.FunctionTypeSmartEnergyManagementPsData, data, nil, nil)
 	assert.Nil(s.T(), fErr)
 
-	startTime := time.Now().Add(time.Hour)
-	msgCounter, err := s.sut.SchedulePowerConsumptionProcess(s.monitoredEntity, startTime, nil)
+	msgCounter, err := s.sut.SchedulePowerConsumptionProcess(s.monitoredEntity, time.Hour, nil)
 	assert.NotNil(s.T(), msgCounter)
 	assert.Nil(s.T(), err)
 }
