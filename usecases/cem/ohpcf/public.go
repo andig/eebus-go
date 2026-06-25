@@ -291,8 +291,8 @@ func (o *OHPCF) PowerConsumptionMinimalPauseDuration(entity spineapi.EntityRemot
 // scheduled process did not start.
 //
 // parameters:
-//   - start: The start time of the power consumption
-func (o *OHPCF) SchedulePowerConsumptionProcess(entity spineapi.EntityRemoteInterface, start time.Time, resultCB func(result model.ResultDataType)) (*model.MsgCounterType, error) {
+//   - startIn: Delay from now until the power consumption starts (0 = start immediately)
+func (o *OHPCF) SchedulePowerConsumptionProcess(entity spineapi.EntityRemoteInterface, startIn time.Duration, resultCB func(result model.ResultDataType)) (*model.MsgCounterType, error) {
 	info, err := o.OptionalPowerConsumption(entity)
 	if err != nil {
 		return nil, err
@@ -305,7 +305,9 @@ func (o *OHPCF) SchedulePowerConsumptionProcess(entity spineapi.EntityRemoteInte
 					SequenceId: &info.PowerSequenceId,
 				},
 				Schedule: &model.PowerSequenceScheduleDataType{
-					StartTime: model.NewAbsoluteOrRelativeTimeTypeFromTime(start),
+					// relative start time (ISO 8601 duration); heat pumps advertise their
+					// scheduling constraints relative as well, so keep the schedule relative
+					StartTime: model.NewAbsoluteOrRelativeTimeTypeFromDuration(startIn),
 				},
 			}},
 		}},
