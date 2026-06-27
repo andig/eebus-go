@@ -113,7 +113,7 @@ func (e *MPC) deviceMeasurementDataUpdate(payload spineapi.EventPayload) {
 		// Scenario 3
 		filter.ScopeType = util.Ptr(model.ScopeTypeTypeACCurrent)
 		if measurement.CheckEventPayloadDataForFilter(payload.Data, filter) && e.EventCB != nil {
-			e.EventCB(payload.Ski, payload.Device, payload.Entity, DataUpdateCurrentsPerPhase)
+			e.EventCB(payload.Ski, payload.Device, payload.Entity, DataUpdateCurrentPerPhase)
 		}
 
 		// Scenario 4
