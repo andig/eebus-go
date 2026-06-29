@@ -83,7 +83,7 @@ func (e *LPC) ConsumptionLimit(entity spineapi.EntityRemoteInterface) (
 func (e *LPC) WriteConsumptionLimit(
 	entity spineapi.EntityRemoteInterface,
 	limit ucapi.LoadLimit,
-	resultCB func(result model.ResultDataType),
+	resultCB func(result model.ResultDataType, msgCounter model.MsgCounterType),
 ) (*model.MsgCounterType, error) {
 	if !e.IsCompatibleEntityType(entity) {
 		return nil, api.ErrNoCompatibleEntity

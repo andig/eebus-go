@@ -272,7 +272,7 @@ func (h *controlbox) sendConsumptionLimit(entity spineapi.EntityRemoteInterface)
 			Value:    100,
 		}
 
-		resultCB := func(msg model.ResultDataType) {
+		resultCB := func(msg model.ResultDataType, msgCounter model.MsgCounterType) {
 			if *msg.ErrorNumber == model.ErrorNumberTypeNoError {
 				fmt.Println("Consumption limit accepted.")
 			} else {
@@ -324,7 +324,7 @@ func (h *controlbox) sendProductionLimit(entity spineapi.EntityRemoteInterface) 
 			Value:    -100,
 		}
 
-		resultCB := func(msg model.ResultDataType) {
+		resultCB := func(msg model.ResultDataType, msgCounter model.MsgCounterType) {
 			if *msg.ErrorNumber == model.ErrorNumberTypeNoError {
 				fmt.Println("Production limit accepted.")
 			} else {
