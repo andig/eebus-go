@@ -1,6 +1,7 @@
 package evcem
 
 import (
+	"errors"
 	"github.com/enbility/eebus-go/api"
 	ucapi "github.com/enbility/eebus-go/usecases/api"
 	usecase "github.com/enbility/eebus-go/usecases/usecase"
@@ -68,7 +69,9 @@ func NewEVCEM(
 		eventCB,
 		UseCaseSupportUpdate,
 		validActorTypes,
-		validEntityTypes)
+		validEntityTypes,
+		false,
+	)
 
 	uc := &EVCEM{
 		UseCaseBase: usecase,
@@ -80,13 +83,17 @@ func NewEVCEM(
 	return uc
 }
 
-func (e *EVCEM) AddFeatures() {
+func (e *EVCEM) AddFeatures() error {
 	// client features
 	var clientFeatures = []model.FeatureTypeType{
 		model.FeatureTypeTypeElectricalConnection,
 		model.FeatureTypeTypeMeasurement,
 	}
 	for _, feature := range clientFeatures {
-		_ = e.LocalEntity.GetOrAddFeature(feature, model.RoleTypeClient)
+		if f := e.LocalEntity.GetOrAddFeature(feature, model.RoleTypeClient); f == nil {
+			return errors.New("failed to add feature: " + string(feature))
+		}
 	}
+
+	return nil
 }
