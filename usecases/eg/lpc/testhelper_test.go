@@ -63,6 +63,7 @@ func (s *EgLPCSuite) BeforeTest(suiteName, testName string) {
 	mockRemoteFeature := spinemocks.NewFeatureRemoteInterface(s.T())
 	mockRemoteDevice.EXPECT().FeatureByEntityTypeAndRole(mock.Anything, mock.Anything, mock.Anything).Return(mockRemoteFeature).Maybe()
 	mockRemoteDevice.EXPECT().Ski().Return(remoteSki).Maybe()
+	mockRemoteDevice.EXPECT().DeviceType().Return(util.Ptr(model.DeviceTypeTypeChargingStation)).Maybe()
 	s.mockRemoteEntity.EXPECT().Device().Return(mockRemoteDevice).Maybe()
 	s.mockRemoteEntity.EXPECT().EntityType().Return(mock.Anything).Maybe()
 	entityAddress := &model.EntityAddressType{}
