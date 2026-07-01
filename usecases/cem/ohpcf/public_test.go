@@ -204,6 +204,20 @@ func (s *CemOhPCFSuite) Test_PowerConsumptionProcessState() {
 	state, err := s.sut.PowerConsumptionProcessState(s.monitoredEntity)
 	assert.Nil(s.T(), err)
 	assert.Equal(s.T(), api.CompressorPowerConsumptionStateAvailable, state)
+
+	// A paused process is written as "paused" [OHPCF-012] and must read back as paused
+	for _, pausedState := range []model.PowerSequenceStateType{
+		model.PowerSequenceStateTypePaused,
+		model.PowerSequenceStateTypeScheduledPaused,
+	} {
+		data.Alternatives[0].PowerSequence[0].State.State = util.Ptr(pausedState)
+		_, fErr = rFeature.UpdateData(true, model.FunctionTypeSmartEnergyManagementPsData, data, nil, nil)
+		assert.Nil(s.T(), fErr)
+
+		state, err = s.sut.PowerConsumptionProcessState(s.monitoredEntity)
+		assert.Nil(s.T(), err)
+		assert.Equal(s.T(), api.CompressorPowerConsumptionStatePaused, state)
+	}
 }
 
 func (s *CemOhPCFSuite) Test_PowerConsumptionMinimalRunDuration() {
