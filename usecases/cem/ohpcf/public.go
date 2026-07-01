@@ -226,7 +226,7 @@ func (o *OHPCF) PowerConsumptionProcessState(entity spineapi.EntityRemoteInterfa
 			return ucapi.CompressorPowerConsumptionStateScheduled, nil
 		case model.PowerSequenceStateTypeRunning:
 			return ucapi.CompressorPowerConsumptionStateRunning, nil
-		case model.PowerSequenceStateTypeScheduledPaused:
+		case model.PowerSequenceStateTypePaused, model.PowerSequenceStateTypeScheduledPaused:
 			return ucapi.CompressorPowerConsumptionStatePaused, nil
 		case model.PowerSequenceStateTypeCompleted:
 			return ucapi.CompressorPowerConsumptionStateCompleted, nil
