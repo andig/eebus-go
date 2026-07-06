@@ -1,6 +1,7 @@
 package ohpcf
 
 import (
+	"errors"
 	"github.com/enbility/eebus-go/api"
 	ucapi "github.com/enbility/eebus-go/usecases/api"
 	"github.com/enbility/eebus-go/usecases/usecase"
@@ -43,6 +44,7 @@ func NewOHPCF(localEntity spineapi.EntityLocalInterface, eventCB api.EntityEvent
 		UseCaseSupportUpdate,
 		validActorTypes,
 		validEntityTypes,
+		false,
 	)
 
 	uc := &OHPCF{
@@ -54,12 +56,16 @@ func NewOHPCF(localEntity spineapi.EntityLocalInterface, eventCB api.EntityEvent
 	return uc
 }
 
-func (o *OHPCF) AddFeatures() {
+func (o *OHPCF) AddFeatures() error {
 	// client features
 	var clientFeatures = []model.FeatureTypeType{
 		model.FeatureTypeTypeSmartEnergyManagementPs,
 	}
 	for _, feature := range clientFeatures {
-		_ = o.LocalEntity.GetOrAddFeature(feature, model.RoleTypeClient)
+		if f := o.LocalEntity.GetOrAddFeature(feature, model.RoleTypeClient); f == nil {
+			return errors.New("failed to add feature: " + string(feature))
+		}
 	}
+
+	return nil
 }
