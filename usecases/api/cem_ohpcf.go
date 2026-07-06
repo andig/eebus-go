@@ -71,8 +71,8 @@ type CemOHPCFInterface interface {
 	// scheduled process has not startet yet.
 	//
 	// parameters:
-	//   - start: The start time of the power consumption
-	SchedulePowerConsumptionProcess(entity spineapi.EntityRemoteInterface, start time.Time, resultCB func(result model.ResultDataType)) (*model.MsgCounterType, error)
+	//   - startIn: Delay from now until the power consumption starts (0 = start immediately)
+	SchedulePowerConsumptionProcess(entity spineapi.EntityRemoteInterface, startIn time.Duration, resultCB func(result model.ResultDataType)) (*model.MsgCounterType, error)
 
 	// stop (abort) the process [OHPCF-022/1].
 	AbortPowerConsumptionProcess(entity spineapi.EntityRemoteInterface, resultCB func(result model.ResultDataType)) (*model.MsgCounterType, error)

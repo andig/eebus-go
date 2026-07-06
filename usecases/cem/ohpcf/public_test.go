@@ -204,6 +204,20 @@ func (s *CemOhPCFSuite) Test_PowerConsumptionProcessState() {
 	state, err := s.sut.PowerConsumptionProcessState(s.monitoredEntity)
 	assert.Nil(s.T(), err)
 	assert.Equal(s.T(), api.CompressorPowerConsumptionStateAvailable, state)
+
+	// A paused process is written as "paused" [OHPCF-012] and must read back as paused
+	for _, pausedState := range []model.PowerSequenceStateType{
+		model.PowerSequenceStateTypePaused,
+		model.PowerSequenceStateTypeScheduledPaused,
+	} {
+		data.Alternatives[0].PowerSequence[0].State.State = util.Ptr(pausedState)
+		_, fErr = rFeature.UpdateData(true, model.FunctionTypeSmartEnergyManagementPsData, data, nil, nil)
+		assert.Nil(s.T(), fErr)
+
+		state, err = s.sut.PowerConsumptionProcessState(s.monitoredEntity)
+		assert.Nil(s.T(), err)
+		assert.Equal(s.T(), api.CompressorPowerConsumptionStatePaused, state)
+	}
 }
 
 func (s *CemOhPCFSuite) Test_PowerConsumptionMinimalRunDuration() {
@@ -265,11 +279,11 @@ func (s *CemOhPCFSuite) Test_PowerConsumptionMinimalPauseDuration() {
 // Scenario 2
 
 func (s *CemOhPCFSuite) Test_SchedulePowerConsumptionProcess() {
-	_, err := s.sut.SchedulePowerConsumptionProcess(s.mockRemoteEntity, time.Now(), nil)
+	_, err := s.sut.SchedulePowerConsumptionProcess(s.mockRemoteEntity, 0, nil)
 	assert.NotNil(s.T(), err)
 
 	// Without valid data, the call should fail
-	_, err = s.sut.SchedulePowerConsumptionProcess(s.monitoredEntity, time.Now(), nil)
+	_, err = s.sut.SchedulePowerConsumptionProcess(s.monitoredEntity, 0, nil)
 	assert.NotNil(s.T(), err)
 
 	// Set up valid SmartEnergyManagementPs data
@@ -302,8 +316,7 @@ func (s *CemOhPCFSuite) Test_SchedulePowerConsumptionProcess() {
 	_, fErr := rFeature.UpdateData(true, model.FunctionTypeSmartEnergyManagementPsData, data, nil, nil)
 	assert.Nil(s.T(), fErr)
 
-	startTime := time.Now().Add(time.Hour)
-	msgCounter, err := s.sut.SchedulePowerConsumptionProcess(s.monitoredEntity, startTime, nil)
+	msgCounter, err := s.sut.SchedulePowerConsumptionProcess(s.monitoredEntity, time.Hour, nil)
 	assert.NotNil(s.T(), msgCounter)
 	assert.Nil(s.T(), err)
 }
