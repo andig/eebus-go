@@ -45,12 +45,6 @@ func NewLPC(localEntity spineapi.EntityLocalInterface, eventCB api.EntityEventCa
 	validEntityTypes := []model.EntityTypeType{
 		model.EntityTypeTypeGridGuard,
 		model.EntityTypeTypeCEM,
-		model.EntityTypeTypeCompressor,
-		model.EntityTypeTypeEVSE,
-		model.EntityTypeTypeHeatPumpAppliance,
-		model.EntityTypeTypeInverter,
-		model.EntityTypeTypeSmartEnergyAppliance,
-		model.EntityTypeTypeSubMeterElectricity,
 	}
 	useCaseScenarios := []api.UseCaseScenario{
 		{
