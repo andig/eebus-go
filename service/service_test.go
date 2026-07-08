@@ -64,10 +64,18 @@ func (s *ServiceSuite) BeforeTest(suiteName, testName string) {
 
 func (s *ServiceSuite) Test_AddUseCase() {
 	ucMock := mocks.NewUseCaseInterface(s.T())
-	ucMock.EXPECT().AddFeatures().Return().Once()
+	ucMock.EXPECT().AddFeatures().Return(nil).Once()
 	ucMock.EXPECT().AddUseCase().Return().Once()
 
 	s.sut.AddUseCase(ucMock)
+}
+
+func (s *ServiceSuite) Test_AddUseCase_Error() {
+	ucMock := mocks.NewUseCaseInterface(s.T())
+	ucMock.EXPECT().AddFeatures().Return(assert.AnError).Once()
+
+	err := s.sut.AddUseCase(ucMock)
+	assert.Equal(s.T(), assert.AnError, err)
 }
 
 func (s *ServiceSuite) Test_EEBUSHandler() {

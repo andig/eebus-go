@@ -63,6 +63,7 @@ func (s *EgLPPSuite) BeforeTest(suiteName, testName string) {
 	mockRemoteFeature := spinemocks.NewFeatureRemoteInterface(s.T())
 	mockRemoteDevice.EXPECT().FeatureByEntityTypeAndRole(mock.Anything, mock.Anything, mock.Anything).Return(mockRemoteFeature).Maybe()
 	mockRemoteDevice.EXPECT().Ski().Return(remoteSki).Maybe()
+	mockRemoteDevice.EXPECT().DeviceType().Return(util.Ptr(model.DeviceTypeTypeChargingStation)).Maybe()
 	s.mockRemoteEntity.EXPECT().Device().Return(mockRemoteDevice).Maybe()
 	s.mockRemoteEntity.EXPECT().EntityType().Return(mock.Anything).Maybe()
 	entityAddress := &model.EntityAddressType{}
@@ -73,7 +74,7 @@ func (s *EgLPPSuite) BeforeTest(suiteName, testName string) {
 
 	localEntity := s.service.LocalDevice().EntityForType(model.EntityTypeTypeCEM)
 	s.sut = NewLPP(localEntity, s.Event)
-	s.sut.AddFeatures()
+	_ = s.sut.AddFeatures()
 	s.sut.AddUseCase()
 
 	s.remoteDevice, s.monitoredEntity = setupDevices(s.service, s.T())

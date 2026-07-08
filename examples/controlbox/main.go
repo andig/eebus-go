@@ -189,10 +189,16 @@ func (h *controlbox) run() {
 
 	localEntity := h.myService.LocalDevice().EntityForType(model.EntityTypeTypeGridGuard)
 	h.uclpc = lpc.NewLPC(localEntity, h.OnLPCEvent)
-	h.myService.AddUseCase(h.uclpc)
+	err = h.myService.AddUseCase(h.uclpc)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	h.uclpp = lpp.NewLPP(localEntity, h.OnLPPEvent)
-	h.myService.AddUseCase(h.uclpp)
+	err = h.myService.AddUseCase(h.uclpp)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	for _, remoteSki := range config.remoteSKIs {
 		h.myService.RegisterRemoteService(shipapi.NewServiceIdentity(remoteSki, "", ""))
@@ -266,7 +272,7 @@ func (h *controlbox) sendConsumptionLimit(entity spineapi.EntityRemoteInterface)
 			Value:    100,
 		}
 
-		resultCB := func(msg model.ResultDataType) {
+		resultCB := func(msg model.ResultDataType, msgCounter model.MsgCounterType) {
 			if *msg.ErrorNumber == model.ErrorNumberTypeNoError {
 				fmt.Println("Consumption limit accepted.")
 			} else {
@@ -318,7 +324,7 @@ func (h *controlbox) sendProductionLimit(entity spineapi.EntityRemoteInterface) 
 			Value:    -100,
 		}
 
-		resultCB := func(msg model.ResultDataType) {
+		resultCB := func(msg model.ResultDataType, msgCounter model.MsgCounterType) {
 			if *msg.ErrorNumber == model.ErrorNumberTypeNoError {
 				fmt.Println("Production limit accepted.")
 			} else {

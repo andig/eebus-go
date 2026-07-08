@@ -37,7 +37,7 @@ type EgLPPInterface interface {
 	WriteProductionLimit(
 		entity spineapi.EntityRemoteInterface,
 		limit LoadLimit,
-		resultCB func(result model.ResultDataType),
+		resultCB func(result model.ResultDataType, msgCounter model.MsgCounterType),
 	) (*model.MsgCounterType, error)
 
 	// Scenario 2

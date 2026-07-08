@@ -126,12 +126,18 @@ func (h *controlbox) run() {
 
 	localEntity := h.myService.LocalDevice().EntityForType(model.EntityTypeTypeHeatPumpAppliance)
 	h.uclpc = lpc.NewLPC(localEntity, h.OnLPCEvent)
-	h.myService.AddUseCase(h.uclpc)
+	err = h.myService.AddUseCase(h.uclpc)
+	if err != nil {
+		log.Fatal(err)
+	}
 	// h.uclpp = lpp.NewLPP(localEntity, h.OnLPPEvent)
 	// h.myService.AddUseCase(h.uclpp)
 
 	h.ucmpc = mpc.NewMPC(localEntity, h.OnMPCEvent)
-	h.myService.AddUseCase(h.ucmpc)
+	err = h.myService.AddUseCase(h.ucmpc)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	if len(config.remoteSKI) == 0 && pairingConfig == nil {
 		os.Exit(0)
@@ -213,7 +219,7 @@ func (h *controlbox) sendLimit(entity spineapi.EntityRemoteInterface) {
 			Value:    7000,
 		}
 
-		resultCB := func(msg model.ResultDataType) {
+		resultCB := func(msg model.ResultDataType, msgCounter model.MsgCounterType) {
 			if *msg.ErrorNumber == model.ErrorNumberTypeNoError {
 				fmt.Println("Limit accepted.")
 			} else {

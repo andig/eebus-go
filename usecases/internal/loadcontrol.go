@@ -141,7 +141,7 @@ func WriteLoadControlLimit(
 	remoteEntity spineapi.EntityRemoteInterface,
 	filter model.LoadControlLimitDescriptionDataType,
 	limit ucapi.LoadLimit,
-	resultCB func(result model.ResultDataType),
+	resultCB func(result model.ResultDataType, msgCounter model.MsgCounterType),
 ) (*model.MsgCounterType, error) {
 	loadControl, err := client.NewLoadControl(localEntity, remoteEntity)
 	if err != nil {
@@ -195,7 +195,7 @@ func WriteLoadControlLimit(
 		cb := func(msg spineapi.ResponseMessage) {
 			response, ok := msg.Data.(*model.ResultDataType)
 			if ok {
-				resultCB(*response)
+				resultCB(*response, *msgCounter)
 			}
 		}
 		if errCB := loadControl.AddResponseCallback(*msgCounter, cb); errCB != nil {
@@ -238,7 +238,7 @@ func WriteLoadControlPhaseLimits(
 	remoteEntity spineapi.EntityRemoteInterface,
 	filter model.LoadControlLimitDescriptionDataType,
 	limits []ucapi.LoadLimitsPhase,
-	resultCB func(result model.ResultDataType),
+	resultCB func(result model.ResultDataType, msgCounter model.MsgCounterType),
 ) (*model.MsgCounterType, error) {
 	loadControl, err := client.NewLoadControl(localEntity, remoteEntity)
 	electricalConnection, err2 := client.NewElectricalConnection(localEntity, remoteEntity)
@@ -321,7 +321,7 @@ func WriteLoadControlPhaseLimits(
 		cb := func(msg spineapi.ResponseMessage) {
 			response, ok := msg.Data.(*model.ResultDataType)
 			if ok {
-				resultCB(*response)
+				resultCB(*response, *msgCounter)
 			}
 		}
 
