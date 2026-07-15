@@ -22,6 +22,11 @@ func (e *OPEV) HandleEvent(payload spineapi.EventPayload) {
 		return
 	}
 
+	if internal.IsHeartbeat(payload) && e.EventCB != nil {
+		e.EventCB(payload.Ski, payload.Device, payload.Entity, DataUpdateHeartbeat)
+		return
+	}
+
 	if payload.EventType != spineapi.EventTypeDataChange ||
 		payload.ChangeType != spineapi.ElementChangeUpdate {
 		return
@@ -69,6 +74,19 @@ func (e *OPEV) evConnected(entity spineapi.EntityRemoteInterface) {
 
 		// get constraints
 		if _, err := evLoadControl.RequestLimitConstraints(nil, nil); err != nil {
+			logging.Log().Debug(err)
+		}
+	}
+
+	// subscribe to the EV's heartbeats, so a missing EV can be detected
+	if evDeviceDiagnosis, err := client.NewDeviceDiagnosis(e.LocalEntity, entity); err == nil {
+		if !evDeviceDiagnosis.HasSubscription() {
+			if _, err := evDeviceDiagnosis.Subscribe(); err != nil {
+				logging.Log().Debug(err)
+			}
+		}
+
+		if _, err := evDeviceDiagnosis.RequestHeartbeat(); err != nil {
 			logging.Log().Debug(err)
 		}
 	}

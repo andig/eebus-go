@@ -17,4 +17,9 @@ const (
 	//
 	// Use `LoadControlLimits` to get the current data
 	DataUpdateLimit api.EventType = "cem-opev-DataUpdateLimit"
+
+	// EV sent a heartbeat via its DeviceDiagnosis server
+	//
+	// This can be used to detect a missing EV, e.g. to enter a failsafe state
+	DataUpdateHeartbeat api.EventType = "cem-opev-DataUpdateHeartbeat"
 )

@@ -42,6 +42,21 @@ func (s *CemOPEVSuite) Test_Events() {
 	s.sut.HandleEvent(payload)
 }
 
+func (s *CemOPEVSuite) Test_Heartbeat() {
+	payload := spineapi.EventPayload{
+		Ski:           remoteSki,
+		Device:        s.remoteDevice,
+		Entity:        s.evEntity,
+		EventType:     spineapi.EventTypeDataChange,
+		ChangeType:    spineapi.ElementChangeUpdate,
+		Function:      model.FunctionTypeDeviceDiagnosisHeartbeatData,
+		CmdClassifier: util.Ptr(model.CmdClassifierTypeNotify),
+		Data:          util.Ptr(model.DeviceDiagnosisHeartbeatDataType{}),
+	}
+	s.sut.HandleEvent(payload)
+	assert.True(s.T(), s.eventCalled)
+}
+
 func (s *CemOPEVSuite) Test_Failures() {
 	s.sut.evConnected(s.mockRemoteEntity)
 

@@ -74,6 +74,7 @@ func (e *OPEV) AddFeatures() {
 	var clientFeatures = []model.FeatureTypeType{
 		model.FeatureTypeTypeLoadControl,
 		model.FeatureTypeTypeElectricalConnection,
+		model.FeatureTypeTypeDeviceDiagnosis,
 	}
 	for _, feature := range clientFeatures {
 		_ = e.LocalEntity.GetOrAddFeature(feature, model.RoleTypeClient)
