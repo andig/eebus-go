@@ -13,6 +13,8 @@ import (
 	"time"
 )
 
+const remoteDataStructureError = "The remote data structure is in an invalid state "
+
 // Scenario 1
 
 func (o *OHPCF) OptionalPowerConsumption(entity spineapi.EntityRemoteInterface) (*ucapi.OptionalPowerConsumptionInfo, error) {
@@ -29,7 +31,6 @@ func (o *OHPCF) OptionalPowerConsumption(entity spineapi.EntityRemoteInterface) 
 	if len(alt) == 0 {
 		return nil, api.ErrDataNotAvailable
 	}
-	remoteDataStructureError := "The remote data structure is in an invalid state "
 	if len(alt[0].PowerSequence) == 0 {
 		return nil, fmt.Errorf("%s(alternative attribute present but no power sequence defined)", remoteDataStructureError)
 	}
@@ -292,7 +293,7 @@ func (o *OHPCF) PowerConsumptionMinimalPauseDuration(entity spineapi.EntityRemot
 // parameters:
 //   - startIn: Delay from now until the power consumption starts (0 = start immediately)
 func (o *OHPCF) SchedulePowerConsumptionProcess(entity spineapi.EntityRemoteInterface, startIn time.Duration, resultCB func(result model.ResultDataType, msgCounter model.MsgCounterType)) (*model.MsgCounterType, error) {
-	info, err := o.OptionalPowerConsumption(entity)
+	seqId, err := o.powerSequenceId(entity)
 	if err != nil {
 		return nil, err
 	}
@@ -301,7 +302,7 @@ func (o *OHPCF) SchedulePowerConsumptionProcess(entity spineapi.EntityRemoteInte
 		Alternatives: []model.SmartEnergyManagementPsAlternativesType{{
 			PowerSequence: []model.SmartEnergyManagementPsPowerSequenceType{{
 				Description: &model.PowerSequenceDescriptionDataType{
-					SequenceId: &info.PowerSequenceId,
+					SequenceId: seqId,
 				},
 				Schedule: &model.PowerSequenceScheduleDataType{
 					// relative start time (ISO 8601 duration); heat pumps advertise their
@@ -317,7 +318,7 @@ func (o *OHPCF) SchedulePowerConsumptionProcess(entity spineapi.EntityRemoteInte
 
 // stop (abort) the process [OHPCF-022/1].
 func (o *OHPCF) AbortPowerConsumptionProcess(entity spineapi.EntityRemoteInterface, resultCB func(result model.ResultDataType, msgCounter model.MsgCounterType)) (*model.MsgCounterType, error) {
-	info, err := o.OptionalPowerConsumption(entity)
+	seqId, err := o.powerSequenceId(entity)
 	if err != nil {
 		return nil, err
 	}
@@ -326,7 +327,7 @@ func (o *OHPCF) AbortPowerConsumptionProcess(entity spineapi.EntityRemoteInterfa
 		Alternatives: []model.SmartEnergyManagementPsAlternativesType{{
 			PowerSequence: []model.SmartEnergyManagementPsPowerSequenceType{{
 				Description: &model.PowerSequenceDescriptionDataType{
-					SequenceId: util.Ptr(info.PowerSequenceId),
+					SequenceId: seqId,
 				},
 				State: &model.PowerSequenceStateDataType{
 					State: util.Ptr(model.PowerSequenceStateTypeInvalid),
@@ -340,7 +341,7 @@ func (o *OHPCF) AbortPowerConsumptionProcess(entity spineapi.EntityRemoteInterfa
 
 // pause the process [OHPCF-022/2].
 func (o *OHPCF) PausePowerConsumptionProcess(entity spineapi.EntityRemoteInterface, resultCB func(result model.ResultDataType, msgCounter model.MsgCounterType)) (*model.MsgCounterType, error) {
-	info, err := o.OptionalPowerConsumption(entity)
+	seqId, err := o.powerSequenceId(entity)
 	if err != nil {
 		return nil, err
 	}
@@ -349,7 +350,7 @@ func (o *OHPCF) PausePowerConsumptionProcess(entity spineapi.EntityRemoteInterfa
 		Alternatives: []model.SmartEnergyManagementPsAlternativesType{{
 			PowerSequence: []model.SmartEnergyManagementPsPowerSequenceType{{
 				Description: &model.PowerSequenceDescriptionDataType{
-					SequenceId: util.Ptr(info.PowerSequenceId),
+					SequenceId: seqId,
 				},
 				State: &model.PowerSequenceStateDataType{
 					State: util.Ptr(model.PowerSequenceStateTypePaused),
@@ -363,7 +364,7 @@ func (o *OHPCF) PausePowerConsumptionProcess(entity spineapi.EntityRemoteInterfa
 
 // resume the process [OHPCF-022/3].
 func (o *OHPCF) ResumePowerConsumptionProcess(entity spineapi.EntityRemoteInterface, resultCB func(result model.ResultDataType, msgCounter model.MsgCounterType)) (*model.MsgCounterType, error) {
-	info, err := o.OptionalPowerConsumption(entity)
+	seqId, err := o.powerSequenceId(entity)
 	if err != nil {
 		return nil, err
 	}
@@ -372,7 +373,7 @@ func (o *OHPCF) ResumePowerConsumptionProcess(entity spineapi.EntityRemoteInterf
 		Alternatives: []model.SmartEnergyManagementPsAlternativesType{{
 			PowerSequence: []model.SmartEnergyManagementPsPowerSequenceType{{
 				Description: &model.PowerSequenceDescriptionDataType{
-					SequenceId: util.Ptr(info.PowerSequenceId),
+					SequenceId: seqId,
 				},
 				State: &model.PowerSequenceStateDataType{
 					State: util.Ptr(model.PowerSequenceStateTypeRunning),
@@ -385,6 +386,26 @@ func (o *OHPCF) ResumePowerConsumptionProcess(entity spineapi.EntityRemoteInterf
 }
 
 // ------------------------ helper methods ------------------------ //
+
+// powerSequenceId returns the id of the announced power sequence, the only element
+// a process control request needs to address it [OHPCF-004], [OHPCF-022].
+func (o *OHPCF) powerSequenceId(entity spineapi.EntityRemoteInterface) (*model.PowerSequenceIdType, error) {
+	data, err := o.checkEntityTypeAndGetData(entity)
+	if err != nil {
+		return nil, err
+	}
+
+	if !o.isDataAvailable(data) {
+		return nil, api.ErrDataNotAvailable
+	}
+
+	seq := data.Alternatives[0].PowerSequence[0]
+	if seq.Description == nil || seq.Description.SequenceId == nil {
+		return nil, fmt.Errorf("%s(alternative attribute present but no power sequenceId defined)", remoteDataStructureError)
+	}
+
+	return util.Ptr(*seq.Description.SequenceId), nil
+}
 
 func (o *OHPCF) checkEntityTypeAndGetData(entity spineapi.EntityRemoteInterface) (*model.SmartEnergyManagementPsDataType, error) {
 	if !o.IsCompatibleEntityType(entity) {

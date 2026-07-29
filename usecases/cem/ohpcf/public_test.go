@@ -532,3 +532,65 @@ func (s *CemOhPCFSuite) Test_isDataAvailable() {
 	available = s.sut.isDataAvailable(fData)
 	assert.Equal(s.T(), true, available)
 }
+
+// A process control request only needs the sequence id, so it must work on a
+// sequence that does not announce the scenario 1 details.
+func (s *CemOhPCFSuite) Test_ProcessControlWithoutOptionalPowerConsumption() {
+	data := &model.SmartEnergyManagementPsDataType{
+		Alternatives: []model.SmartEnergyManagementPsAlternativesType{{
+			PowerSequence: []model.SmartEnergyManagementPsPowerSequenceType{{
+				Description: &model.PowerSequenceDescriptionDataType{
+					SequenceId: util.Ptr(model.PowerSequenceIdType(1)),
+				},
+				State: &model.PowerSequenceStateDataType{
+					State: util.Ptr(model.PowerSequenceStateTypeInactive),
+				},
+			}},
+		}},
+	}
+
+	rFeature := s.remoteDevice.FeatureByEntityTypeAndRole(s.monitoredEntity, model.FeatureTypeTypeSmartEnergyManagementPs, model.RoleTypeServer)
+	_, fErr := rFeature.UpdateData(true, model.FunctionTypeSmartEnergyManagementPsData, data, nil, nil)
+	assert.Nil(s.T(), fErr)
+
+	// the scenario 1 overview is incomplete
+	_, err := s.sut.OptionalPowerConsumption(s.monitoredEntity)
+	assert.NotNil(s.T(), err)
+
+	// process control still addresses the sequence
+	msgCounter, err := s.sut.SchedulePowerConsumptionProcess(s.monitoredEntity, 0, nil)
+	assert.NotNil(s.T(), msgCounter)
+	assert.Nil(s.T(), err)
+
+	msgCounter, err = s.sut.ResumePowerConsumptionProcess(s.monitoredEntity, nil)
+	assert.NotNil(s.T(), msgCounter)
+	assert.Nil(s.T(), err)
+
+	msgCounter, err = s.sut.PausePowerConsumptionProcess(s.monitoredEntity, nil)
+	assert.NotNil(s.T(), msgCounter)
+	assert.Nil(s.T(), err)
+
+	msgCounter, err = s.sut.AbortPowerConsumptionProcess(s.monitoredEntity, nil)
+	assert.NotNil(s.T(), msgCounter)
+	assert.Nil(s.T(), err)
+}
+
+// The sequence id is mandatory for process control.
+func (s *CemOhPCFSuite) Test_ProcessControlWithoutSequenceId() {
+	data := &model.SmartEnergyManagementPsDataType{
+		Alternatives: []model.SmartEnergyManagementPsAlternativesType{{
+			PowerSequence: []model.SmartEnergyManagementPsPowerSequenceType{{
+				State: &model.PowerSequenceStateDataType{
+					State: util.Ptr(model.PowerSequenceStateTypeInactive),
+				},
+			}},
+		}},
+	}
+
+	rFeature := s.remoteDevice.FeatureByEntityTypeAndRole(s.monitoredEntity, model.FeatureTypeTypeSmartEnergyManagementPs, model.RoleTypeServer)
+	_, fErr := rFeature.UpdateData(true, model.FunctionTypeSmartEnergyManagementPsData, data, nil, nil)
+	assert.Nil(s.T(), fErr)
+
+	_, err := s.sut.SchedulePowerConsumptionProcess(s.monitoredEntity, 0, nil)
+	assert.NotNil(s.T(), err)
+}
