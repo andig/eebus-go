@@ -133,12 +133,15 @@ func (f *Feature) writeFullList(function model.FunctionType, data any, cmd model
 	// the remote notifies the change only after the result, so a follow-up write
 	// built in between would merge into the stale cache and revert this one
 	prev := f.featureRemote.DataCopy(function)
-	if _, err := f.featureRemote.UpdateData(true, function, data, nil, nil); err != nil || prev == nil {
+	_, _ = f.featureRemote.UpdateData(true, function, data, nil, nil)
+
+	// nothing to restore if the remote's state was unknown before
+	if prev == nil {
 		return msgCounter, nil
 	}
 
 	_ = f.featureLocal.AddResponseCallback(*msgCounter, func(msg spineapi.ResponseMessage) {
-		if res, ok := msg.Data.(*model.ResultDataType); ok && res.ErrorNumber != nil && *res.ErrorNumber != model.ErrorNumberTypeNoError {
+		if res, ok := msg.Data.(*model.ResultDataType); ok && model.NewErrorTypeFromResult(res) != nil {
 			_, _ = f.featureRemote.UpdateData(true, function, prev, nil, nil)
 		}
 	})
